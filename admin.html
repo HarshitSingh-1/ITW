@@ -211,6 +211,10 @@
 
             if (currentUserRole === 'super_admin') {
                 document.getElementById('tab-roles').classList.remove('hidden');
+            } else {
+                // Physically remove the role management tab and form from the HTML so organizers can never interact with it
+                document.getElementById('tab-roles').remove();
+                document.getElementById('view-roles').remove();
             }
 
             // --- Tab Switching Logic ---
@@ -218,7 +222,7 @@
                 events: { btn: document.getElementById('tab-events'), view: document.getElementById('view-events') },
                 create: { btn: document.getElementById('tab-create'), view: document.getElementById('view-create') },
                 roles: { btn: document.getElementById('tab-roles'), view: document.getElementById('view-roles') },
-                manage: { view: document.getElementById('view-manage') } // No tab button for manage
+                manage: { view: document.getElementById('view-manage') } 
             };
 
             function switchTab(activeTabId) {
@@ -397,18 +401,24 @@
             });
 
             // --- View: Role Management Logic ---
-            document.getElementById('role-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const targetEmail = document.getElementById('role-email').value;
-                const newRole = document.getElementById('role-select').value;
-                
-                const { error } = await supabase.from('profiles').update({ role: newRole }).eq('email', targetEmail);
-                if (error) {
-                    showNotif('Failed to update role. Make sure the user has logged in at least once.', 'error');
-                } else {
-                    showNotif(`Successfully updated ${targetEmail} to ${newRole.toUpperCase()}!`);
-                }
-            });
+            const roleForm = document.getElementById('role-form');
+            if (roleForm) {
+                roleForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const targetEmail = document.getElementById('role-email').value;
+                    const newRole = document.getElementById('role-select').value;
+                    
+                    // .select() forces Supabase to return the updated row. If RLS blocks it, data will be empty.
+                    const { data, error } = await supabase.from('profiles').update({ role: newRole }).eq('email', targetEmail).select();
+                    
+                    if (error || !data || data.length === 0) {
+                        showNotif('Failed to update role. Make sure you have Admin rights and the user exists.', 'error');
+                    } else {
+                        showNotif(`Successfully updated ${targetEmail} to ${newRole.toUpperCase()}!`);
+                        e.target.reset();
+                    }
+                });
+            }
 
             // Initial load
             fetchEvents();
