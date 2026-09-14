@@ -6,6 +6,8 @@
     <title>Admin Dashboard - IIITNR Events</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -79,6 +81,22 @@
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Export to CSV
                     </button>
+                </div>
+
+                <!-- Graphical Analytics (Phase 4) -->
+                <div id="analytics-panel" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 hidden">
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col items-center">
+                        <h4 class="text-sm font-bold text-gray-500 mb-2">Gender Distribution</h4>
+                        <div class="w-full h-48 relative"><canvas id="chart-gender"></canvas></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col items-center">
+                        <h4 class="text-sm font-bold text-gray-500 mb-2">Branch Distribution</h4>
+                        <div class="w-full h-48 relative"><canvas id="chart-branch"></canvas></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col items-center">
+                        <h4 class="text-sm font-bold text-gray-500 mb-2">Batch Distribution</h4>
+                        <div class="w-full h-48 relative"><canvas id="chart-batch"></canvas></div>
+                    </div>
                 </div>
 
                 <div class="bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden">
@@ -209,12 +227,20 @@
             document.getElementById('dashboard-content').classList.remove('hidden');
             document.getElementById('nav-scanner').classList.remove('hidden');
 
-            if (currentUserRole === 'super_admin') {
+            if (currentUserRole === 'super_admin' || currentUserRole === 'organizer') {
                 document.getElementById('tab-roles').classList.remove('hidden');
+                
+                // If they are just an organizer, restrict them from making other organizers
+                if (currentUserRole === 'organizer') {
+                    const orgOption = document.querySelector('#role-select option[value="organizer"]');
+                    if (orgOption) orgOption.remove();
+                }
             } else {
-                // Physically remove the role management tab and form from the HTML so organizers can never interact with it
-                document.getElementById('tab-roles').remove();
-                document.getElementById('view-roles').remove();
+                // Physically remove the role management tab for students/gatekeepers
+                const tabRoles = document.getElementById('tab-roles');
+                const viewRoles = document.getElementById('view-roles');
+                if (tabRoles) tabRoles.remove();
+                if (viewRoles) viewRoles.remove();
             }
 
             // --- Tab Switching Logic ---
@@ -242,10 +268,13 @@
                 if (activeTabId === 'events') fetchEvents();
             }
 
-            tabs.events.btn.addEventListener('click', () => switchTab('events'));
-            tabs.create.btn.addEventListener('click', () => switchTab('create'));
-            tabs.roles.btn.addEventListener('click', () => switchTab('roles'));
+            if (tabs.events.btn) tabs.events.btn.addEventListener('click', () => switchTab('events'));
+            if (tabs.create.btn) tabs.create.btn.addEventListener('click', () => switchTab('create'));
+            if (tabs.roles.btn) tabs.roles.btn.addEventListener('click', () => switchTab('roles'));
             document.getElementById('btn-back').addEventListener('click', () => switchTab('events'));
+
+            // Chart instances
+            let chartGender, chartBranch, chartBatch;
 
             // --- View: Events ---
             async function fetchEvents() {
@@ -257,17 +286,30 @@
                 const { data: events, error } = await query;
                 if (error) { console.error(error); return; }
 
+                // Fetch Organizers if Super Admin
+                let orgMap = {};
+                if (currentUserRole === 'super_admin' && events.length > 0) {
+                    const emails = [...new Set(events.map(e => e.organizer_email))];
+                    const { data: orgs } = await supabase.from('profiles').select('email, full_name').in('email', emails);
+                    if (orgs) {
+                        orgs.forEach(o => orgMap[o.email] = o.full_name);
+                    }
+                }
+
                 document.getElementById('events-count').textContent = `Showing ${events.length} events`;
                 const grid = document.getElementById('events-grid');
                 grid.innerHTML = '';
 
                 events.forEach(event => {
                     const fill = Math.round((event.tickets_sold / event.total_capacity) * 100) || 0;
+                    const orgName = currentUserRole === 'super_admin' ? (orgMap[event.organizer_email] || event.organizer_email) : '';
+                    
                     const card = document.createElement('div');
                     card.className = 'bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md cursor-pointer transition-shadow flex flex-col h-full';
                     card.onclick = () => openManageEvent(event);
                     card.innerHTML = `
-                        <h3 class="font-bold text-lg text-gray-900 mb-1">${event.title}</h3>
+                        <h3 class="font-bold text-lg text-gray-900 leading-tight mb-1">${event.title}</h3>
+                        ${orgName ? `<p class="text-xs text-blue-600 font-semibold mb-2">By: ${orgName}</p>` : ''}
                         <p class="text-sm text-gray-500 mb-4">${new Date(event.event_date).toLocaleDateString()}</p>
                         <div class="mt-auto">
                             <div class="flex justify-between text-xs text-gray-600 mb-1">
@@ -282,7 +324,7 @@
                 });
             }
 
-            // --- View: Manage Event (Attendees) ---
+            // --- View: Manage Event (Attendees & Analytics) ---
             async function openManageEvent(event) {
                 switchTab('manage');
                 document.getElementById('manage-title').textContent = event.title;
@@ -290,11 +332,13 @@
                 
                 const tbody = document.getElementById('attendees-table');
                 const loading = document.getElementById('attendees-loading');
+                const analyticsPanel = document.getElementById('analytics-panel');
+                
                 tbody.innerHTML = '';
                 loading.classList.remove('hidden');
+                analyticsPanel.classList.add('hidden');
 
                 try {
-                    // 1. Fetch tickets
                     const { data: tickets, error: tErr } = await supabase.from('tickets').select('*').eq('event_id', event.id);
                     if (tErr) throw tErr;
 
@@ -303,21 +347,30 @@
                         return;
                     }
 
-                    // 2. Fetch corresponding profiles
                     const emails = tickets.map(t => t.student_email);
                     const { data: profiles, error: pErr } = await supabase.from('profiles').select('*').in('email', emails);
                     if (pErr) throw pErr;
 
-                    // Map for easy lookup
                     const profileMap = {};
                     profiles.forEach(p => profileMap[p.email] = p);
 
                     loading.classList.add('hidden');
+                    analyticsPanel.classList.remove('hidden');
                     
-                    // Store for export
+                    // Demographic counters
+                    const genders = { Male: 0, Female: 0, Other: 0, 'N/A': 0 };
+                    const branches = { CSE: 0, ECE: 0, DSAI: 0, 'N/A': 0 };
+                    const batches = {};
+
                     currentEventIdForExport = event.title;
                     currentAttendeesData = tickets.map(t => {
                         const p = profileMap[t.student_email] || {};
+                        
+                        // Count demographics
+                        genders[p.gender || 'N/A'] = (genders[p.gender || 'N/A'] || 0) + 1;
+                        branches[p.branch || 'N/A'] = (branches[p.branch || 'N/A'] || 0) + 1;
+                        batches[p.batch || 'N/A'] = (batches[p.batch || 'N/A'] || 0) + 1;
+
                         return {
                             name: p.full_name || 'Unknown',
                             email: t.student_email,
@@ -343,10 +396,50 @@
                         `;
                         tbody.appendChild(tr);
                     });
+
+                    // Render Charts
+                    renderCharts(genders, branches, batches);
+
                 } catch (err) {
                     console.error(err);
                     loading.textContent = 'Failed to load attendees.';
                 }
+            }
+
+            function renderCharts(genders, branches, batches) {
+                // Destroy old charts if switching events
+                if (chartGender) chartGender.destroy();
+                if (chartBranch) chartBranch.destroy();
+                if (chartBatch) chartBatch.destroy();
+
+                const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } };
+
+                chartGender = new Chart(document.getElementById('chart-gender'), {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(genders),
+                        datasets: [{ data: Object.values(genders), backgroundColor: ['#3b82f6', '#ec4899', '#8b5cf6', '#9ca3af'] }]
+                    },
+                    options: commonOptions
+                });
+
+                chartBranch = new Chart(document.getElementById('chart-branch'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(branches),
+                        datasets: [{ data: Object.values(branches), backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#9ca3af'] }]
+                    },
+                    options: commonOptions
+                });
+
+                chartBatch = new Chart(document.getElementById('chart-batch'), {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(batches),
+                        datasets: [{ label: 'Students', data: Object.values(batches), backgroundColor: '#6366f1', borderRadius: 4 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+                });
             }
 
             // --- CSV Export Logic ---
