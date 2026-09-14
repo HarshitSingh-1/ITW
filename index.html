@@ -3,91 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - IIITNR Events</title>
+    <title>IIITNR Events</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .poster-card:hover .poster-overlay { opacity: 1; }
+        .aspect-[3/4] { aspect-ratio: 3 / 4; }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Navbar -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
-                    <h1 class="text-xl font-bold text-gray-900">IIITNR Events</h1>
+                    <h1 class="text-2xl font-black text-blue-600 tracking-tighter cursor-pointer" onclick="window.location.reload()">EVENTS</h1>
                     <div class="hidden md:flex space-x-4">
-                        <a href="index.html" class="text-blue-600 font-medium px-3 py-2 rounded-md">Home</a>
-                        <a href="wallet.html" class="text-gray-500 hover:text-gray-900 font-medium px-3 py-2 rounded-md">My Wallet</a>
-                        <a href="history.html" class="text-gray-500 hover:text-gray-900 font-medium px-3 py-2 rounded-md">History</a>
+                        <a href="index.html" class="text-blue-600 font-bold px-3 py-2">Home</a>
+                        <a href="wallet.html" class="text-gray-500 hover:text-gray-900 font-medium px-3 py-2">My Wallet</a>
+                        <a href="history.html" class="text-gray-500 hover:text-gray-900 font-medium px-3 py-2">History</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span id="user-email-display" class="text-sm text-gray-600 hidden md:block"></span>
-                    <button id="logout-btn" class="bg-red-50 hover:text-red-700 text-red-600 px-4 py-2 rounded-md text-sm font-medium transition-colors border border-red-200">
-                        Log Out
-                    </button>
+                    <span id="user-email-display" class="text-sm text-gray-600 hidden md:block font-medium"></span>
+                    <button id="logout-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-bold transition-colors">Log Out</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="p-4 sm:p-8 max-w-7xl mx-auto">
-        <div class="flex justify-between items-end mb-6">
-            <div>
-                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Upcoming Events</h2>
-                <p class="text-gray-500 mt-1">Browse and book tickets for campus events.</p>
+    <!-- Main Application Container -->
+    <main class="w-full">
+        <div id="notification-banner" class="hidden max-w-7xl mx-auto mt-4 px-4 p-4 rounded-lg text-sm font-medium"></div>
+
+        <!-- VIEW 1: The Poster Grid (BookMyShow Style Home) -->
+        <div id="view-feed" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h2 class="text-3xl font-black text-gray-900 tracking-tight mb-8">Recommended Events</h2>
+            
+            <div id="events-loading" class="text-center py-12 text-gray-500 font-medium">Loading events...</div>
+            <div id="no-events-msg" class="hidden text-center py-20 text-gray-400 font-medium text-lg">No upcoming events found.</div>
+            
+            <div id="events-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 hidden">
+                <!-- Posters Injected Here -->
             </div>
         </div>
 
-        <!-- Notification Banner -->
-        <div id="notification-banner" class="hidden mb-6 p-4 rounded-lg text-sm font-medium"></div>
+        <!-- VIEW 2: Dedicated Event Detail Page -->
+        <div id="view-detail" class="hidden pb-24">
+            <!-- Hero Image Banner -->
+            <div class="w-full h-64 md:h-96 bg-gray-900 relative">
+                <img id="detail-hero-img" src="" alt="Event Cover" class="w-full h-full object-cover opacity-60">
+                <div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
+                <button onclick="closeDetailView()" class="absolute top-6 left-6 bg-black/50 hover:bg-black/80 text-white rounded-full p-2 backdrop-blur-sm transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+            </div>
 
-        <!-- Events Grid -->
-        <div id="events-loading" class="text-center py-12 text-gray-500">
-            <svg class="animate-spin h-8 w-8 mx-auto mb-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Loading events...
-        </div>
-        
-        <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
-            <!-- Event Cards will be injected here by JS -->
-        </div>
-        
-        <div id="no-events-msg" class="hidden text-center py-12 text-gray-500 bg-white rounded-lg border border-gray-200 border-dashed">
-            No upcoming events found.
+            <!-- Content Area -->
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 -mt-20 relative z-10">
+                <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-100">
+                    <h1 id="detail-title" class="text-3xl md:text-5xl font-black text-gray-900 tracking-tight mb-4">Event Title</h1>
+                    
+                    <div class="flex flex-wrap gap-4 mb-8 text-sm font-medium text-gray-700">
+                        <div class="flex items-center bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
+                            <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span id="detail-date">Date & Time</span>
+                        </div>
+                        <div class="flex items-center bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
+                            <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                            <span id="detail-venue">Venue</span>
+                        </div>
+                    </div>
+
+                    <div class="prose max-w-none text-gray-600 mb-10" id="detail-description">
+                        Description goes here...
+                    </div>
+
+                    <!-- Capacity Counter (Kept as requested) -->
+                    <div class="bg-blue-50 border border-blue-100 p-5 rounded-xl">
+                        <div class="flex justify-between text-sm font-bold text-gray-800 mb-2">
+                            <span>Tickets Booked</span>
+                            <span id="detail-capacity-text">0 / 0</span>
+                        </div>
+                        <div class="w-full bg-white rounded-full h-3 border border-blue-100 overflow-hidden">
+                            <div id="detail-capacity-bar" class="h-full rounded-full bg-blue-600 transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sticky Booking Bar -->
+            <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 p-4">
+                <div class="max-w-4xl mx-auto flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-gray-900" id="sticky-title">Event Title</p>
+                        <p class="text-xs text-green-600 font-bold">Free Entry</p>
+                    </div>
+                    <button id="book-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-10 rounded-full focus:outline-none transition-transform active:scale-95 shadow-lg">
+                        Book Ticket
+                    </button>
+                </div>
+            </div>
         </div>
     </main>
 
     <script src="app.js"></script>
     <script>
-        // Phase 2: Feed & Booking Logic
         document.addEventListener('DOMContentLoaded', async () => {
             const supabase = window.app.supabase;
-            const eventsGrid = document.getElementById('events-grid');
-            const loading = document.getElementById('events-loading');
-            const noEventsMsg = document.getElementById('no-events-msg');
             const notification = document.getElementById('notification-banner');
-            const emailDisplay = document.getElementById('user-email-display');
+            let userEmail = '';
+            let currentEventId = null;
 
-            // Wait for session to initialize
+            // Session
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) return; // app.js will handle redirect
-
-            const userEmail = session.user.email;
-            if(emailDisplay) emailDisplay.textContent = userEmail;
+            if (session) {
+                userEmail = session.user.email;
+                if(document.getElementById('user-email-display')) document.getElementById('user-email-display').textContent = userEmail;
+            }
 
             function showNotification(msg, type = 'success') {
                 notification.textContent = msg;
-                notification.className = `mb-6 p-4 rounded-lg text-sm font-medium block ${type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`;
+                notification.className = `max-w-7xl mx-auto mt-4 px-4 p-4 rounded-lg text-sm font-medium block ${type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 setTimeout(() => notification.classList.add('hidden'), 5000);
             }
 
+            // Expose for back button
+            window.closeDetailView = () => {
+                document.getElementById('view-detail').classList.add('hidden');
+                document.getElementById('view-feed').classList.remove('hidden');
+                window.scrollTo(0, 0);
+            };
+
+            // Global variable to hold loaded events for quick access
+            let eventsData = [];
+
             async function fetchEvents() {
                 try {
-                    // Fetch future events ordered by date
                     const { data: events, error } = await supabase
                         .from('events')
                         .select('*')
@@ -95,116 +149,131 @@
                         .order('event_date', { ascending: true });
 
                     if (error) throw error;
-
-                    loading.classList.add('hidden');
+                    
+                    eventsData = events;
+                    document.getElementById('events-loading').classList.add('hidden');
+                    const grid = document.getElementById('events-grid');
 
                     if (events.length === 0) {
-                        noEventsMsg.classList.remove('hidden');
+                        document.getElementById('no-events-msg').classList.remove('hidden');
                         return;
                     }
 
-                    eventsGrid.classList.remove('hidden');
-                    eventsGrid.innerHTML = ''; // Clear existing
+                    grid.classList.remove('hidden');
+                    grid.innerHTML = ''; 
 
                     events.forEach(event => {
                         const dateObj = new Date(event.event_date);
-                        const dateString = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-                        const timeString = dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-                        
                         const isSoldOut = event.tickets_sold >= event.total_capacity;
-                        const capacityPercentage = Math.min(100, (event.tickets_sold / event.total_capacity) * 100);
+                        
+                        // Default placeholder if no poster_url
+                        const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop';
 
                         const card = document.createElement('div');
-                        card.className = 'bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow';
+                        card.className = 'poster-card relative rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white border border-gray-100';
+                        card.onclick = () => openDetailView(event.id);
                         
                         card.innerHTML = `
-                            <div class="p-6 flex-grow">
-                                <div class="flex justify-between items-start mb-2">
-                                    <h3 class="text-xl font-bold text-gray-900 leading-tight">${event.title}</h3>
-                                    ${isSoldOut ? '<span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded">Sold Out</span>' : ''}
+                            <div class="aspect-[3/4] relative w-full overflow-hidden bg-gray-200">
+                                <img src="${imgUrl}" alt="${event.title}" class="w-full h-full object-cover">
+                                ${isSoldOut ? '<div class="absolute top-2 right-2 bg-black text-white text-xs font-black px-2 py-1 rounded">SOLD OUT</div>' : ''}
+                                <!-- Dark gradient overlay for text readability -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                                <div class="absolute bottom-0 left-0 p-4 w-full">
+                                    <h3 class="text-white font-black text-lg leading-tight line-clamp-2">${event.title}</h3>
+                                    <p class="text-gray-300 text-xs font-medium mt-1">${dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • ${event.venue}</p>
                                 </div>
-                                <div class="text-sm text-blue-600 font-medium mb-4">
-                                    <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                    ${dateString} at ${timeString}
-                                </div>
-                                <div class="text-sm text-gray-600 mb-4 flex items-center">
-                                    <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                    ${event.venue}
-                                </div>
-                                <p class="text-gray-600 text-sm mb-6 line-clamp-2">${event.description || 'No description provided.'}</p>
-                                
-                                <!-- Capacity Meter -->
-                                <div class="mt-auto">
-                                    <div class="flex justify-between text-xs text-gray-500 mb-1 font-medium">
-                                        <span>Capacity</span>
-                                        <span>${event.tickets_sold} / ${event.total_capacity}</span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-2">
-                                        <div class="h-2 rounded-full ${capacityPercentage > 85 ? 'bg-red-500' : 'bg-blue-600'}" style="width: ${capacityPercentage}%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50">
-                                <button 
-                                    onclick="bookTicket('${event.id}', '${event.title}')" 
-                                    class="w-full font-semibold py-2 px-4 rounded-lg focus:outline-none transition-colors ${isSoldOut ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'}"
-                                    ${isSoldOut ? 'disabled' : ''}>
-                                    ${isSoldOut ? 'Unavailable' : 'Book Ticket'}
-                                </button>
                             </div>
                         `;
-                        eventsGrid.appendChild(card);
+                        grid.appendChild(card);
                     });
-                } catch (error) {
-                    console.error('Error fetching events:', error);
-                    showNotification('Failed to load events. Please try again.', 'error');
+                } catch (err) {
+                    console.error('Error fetching events:', err);
+                    document.getElementById('events-loading').textContent = 'Failed to load feed.';
                 }
             }
 
-            // Expose global function for the inline onclick handler
-            window.bookTicket = async function(eventId, eventTitle) {
-                // Confirm action
-                if (!confirm(`Are you sure you want to book a ticket for "${eventTitle}"?`)) return;
+            function openDetailView(id) {
+                const event = eventsData.find(e => e.id === id);
+                if (!event) return;
+                
+                currentEventId = event.id;
+                
+                // Toggle Views
+                document.getElementById('view-feed').classList.add('hidden');
+                document.getElementById('view-detail').classList.remove('hidden');
+                window.scrollTo(0, 0);
 
-                // Generate a unique unguessable QR string
-                // Format: TKT-[EventUUID]-[RandomString]
+                // Populate Data
+                const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600&auto=format&fit=crop';
+                document.getElementById('detail-hero-img').src = imgUrl;
+                document.getElementById('detail-title').textContent = event.title;
+                document.getElementById('sticky-title').textContent = event.title;
+                
+                const d = new Date(event.event_date);
+                document.getElementById('detail-date').textContent = `${d.toLocaleDateString()} at ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                document.getElementById('detail-venue').textContent = event.venue;
+                document.getElementById('detail-description').innerText = event.description || 'No additional details provided.';
+                
+                // Capacity counter
+                document.getElementById('detail-capacity-text').textContent = `${event.tickets_sold} / ${event.total_capacity}`;
+                const fillPercent = Math.min(100, (event.tickets_sold / event.total_capacity) * 100);
+                document.getElementById('detail-capacity-bar').style.width = `${fillPercent}%`;
+                if(fillPercent >= 100) document.getElementById('detail-capacity-bar').classList.add('bg-red-500');
+                else document.getElementById('detail-capacity-bar').classList.remove('bg-red-500');
+
+                // Button State
+                const btn = document.getElementById('book-btn');
+                if (fillPercent >= 100) {
+                    btn.textContent = 'Sold Out';
+                    btn.disabled = true;
+                    btn.className = 'bg-gray-400 text-white font-black py-3 px-10 rounded-full cursor-not-allowed shadow-none';
+                } else {
+                    btn.textContent = 'Book Ticket';
+                    btn.disabled = false;
+                    btn.className = 'bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-10 rounded-full focus:outline-none transition-transform active:scale-95 shadow-lg';
+                }
+            }
+
+            // Booking Logic
+            document.getElementById('book-btn').addEventListener('click', async () => {
+                const event = eventsData.find(e => e.id === currentEventId);
+                if (!event || !userEmail) return;
+
+                const btn = document.getElementById('book-btn');
+                btn.disabled = true; btn.textContent = 'Booking...';
+
                 const randomStr = Math.random().toString(36).substring(2, 10);
-                const qrString = `TKT-${eventId}-${randomStr}`;
+                const qrString = `TKT-${event.id}-${randomStr}`;
 
                 try {
-                    // Call the RPC function defined in the SQL schema
                     const { data: success, error } = await supabase.rpc('book_ticket_safe', {
-                        p_event_id: eventId,
+                        p_event_id: event.id,
                         p_student_email: userEmail,
                         p_qr_string: qrString
                     });
 
-                    if (error) {
-                        // RPC throws errors if they fail constraint checks sometimes
-                        throw error;
-                    }
+                    if (error) throw error;
 
                     if (success) {
-                        showNotification(`Successfully booked ticket for ${eventTitle}! Check your wallet.`);
-                        fetchEvents(); // Refresh capacity meters
+                        showNotification(`Ticket Confirmed! Go to My Wallet to view it.`);
+                        // Refresh data to update counter
+                        const { data: refreshedEvent } = await supabase.from('events').select('*').eq('id', event.id).single();
+                        if (refreshedEvent) {
+                            const index = eventsData.findIndex(e => e.id === event.id);
+                            if(index !== -1) eventsData[index] = refreshedEvent;
+                            openDetailView(event.id); // re-render counters
+                        }
                     } else {
-                        showNotification(`Failed to book ticket. The event might be sold out.`, 'error');
-                        fetchEvents(); // Refresh to show it as sold out
+                        showNotification(`Failed to book. Event is sold out.`, 'error');
                     }
-
                 } catch (err) {
-                    console.error('Booking error:', err);
-                    
-                    // Handle unique constraint error if the student already booked (assuming we add a unique constraint on event_id + student_email)
-                    if (err.code === '23505') {
-                        showNotification(`You already have a ticket for this event.`, 'error');
-                    } else {
-                        showNotification(`An error occurred while booking.`, 'error');
-                    }
+                    if (err.code === '23505') showNotification(`You already have a ticket for this event!`, 'error');
+                    else showNotification(`An error occurred.`, 'error');
+                    btn.disabled = false; btn.textContent = 'Book Ticket';
                 }
-            };
+            });
 
-            // Initial load
             fetchEvents();
         });
     </script>

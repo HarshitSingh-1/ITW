@@ -125,6 +125,11 @@
                             <input type="text" id="venue" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700">Poster Image URL (Optional)</label>
+                            <input type="url" id="poster_url" placeholder="https://..." class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                            <p class="text-xs text-gray-500 mt-1">Paste a link to an image (e.g. from Imgur or Google Drive) to use as the event poster.</p>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700">Description</label>
                             <textarea id="description" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></textarea>
                         </div>
@@ -376,7 +381,8 @@
                     event_date: new Date(document.getElementById('event_date').value).toISOString(),
                     venue: document.getElementById('venue').value,
                     total_capacity: parseInt(document.getElementById('total_capacity').value),
-                    organizer_email: currentUserEmail
+                    organizer_email: currentUserEmail,
+                    poster_url: document.getElementById('poster_url').value || null
                 };
 
                 const { error } = await supabase.from('events').insert([newEvent]);
