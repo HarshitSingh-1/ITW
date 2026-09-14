@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Profile - IIITNR Events</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen font-sans">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border border-gray-100">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Complete Profile</h1>
+            <p class="text-gray-500 text-sm mt-2">Welcome to IIITNR Events! We just need a few details to set up your digital ticket wallet.</p>
+        </div>
+        
+        <!-- Extracted Info Banner -->
+        <div class="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-100 flex items-start space-x-3">
+            <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div>
+                <p class="text-sm text-blue-800 font-medium">Auto-detected from Email:</p>
+                <p class="text-xs text-blue-600 mt-1" id="extracted-info">Analyzing...</p>
+            </div>
+        </div>
+
+        <form id="onboarding-form" class="space-y-5">
+            <div>
+                <label for="full_name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                <input type="text" id="full_name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div>
+                <label for="gender" class="block text-sm font-medium text-gray-700">Gender</label>
+                <select id="gender" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <option value="" disabled selected>Select your gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input type="tel" id="phone" pattern="[0-9]{10}" placeholder="10-digit mobile number" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors mt-6">
+                Save & Continue
+            </button>
+            <div id="error-message" class="text-red-500 mt-4 text-sm hidden text-center"></div>
+        </form>
+    </div>
+
+    <!-- Ensure app.js loads first to expose window.app.supabase, but we handle the logic below -->
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const supabase = window.app.supabase;
+            const form = document.getElementById('onboarding-form');
+            const submitBtn = document.getElementById('submit-btn');
+            const errMsg = document.getElementById('error-message');
+            
+            // Get session
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return; // app.js handles redirect to login
+            
+            const email = session.user.email;
+            
+            let batch = 'Faculty/Staff';
+            let branch = 'N/A';
+            let defaultName = email.split('@')[0];
+
+            // Regex parsing: e.g. harshit26102@iiitnr.edu.in
+            // Match 1: letters (name)
+            // Match 2: 2 digits (year)
+            // Match 3: 3 digits (100=CSE, 101=ECE, 102=DSAI)
+            const studentRegex = /^([a-zA-Z]+)(\d{2})(100|101|102)@iiitnr\.edu\.in$/i;
+            const match = email.match(studentRegex);
+
+            if (match) {
+                defaultName = match[1].charAt(0).toUpperCase() + match[1].slice(1);
+                batch = '20' + match[2]; // e.g., 2026
+                const branchCode = match[3];
+                branch = branchCode === '100' ? 'CSE' : (branchCode === '101' ? 'ECE' : 'DSAI');
+                
+                document.getElementById('extracted-info').innerHTML = `<strong>Batch:</strong> ${batch} <br> <strong>Branch:</strong> ${branch}`;
+            } else {
+                // Capitalize first letter of whatever is before @
+                defaultName = defaultName.charAt(0).toUpperCase() + defaultName.slice(1);
+                document.getElementById('extracted-info').innerHTML = `<strong>Role:</strong> Faculty/Staff <br> <em>(No batch/branch detected)</em>`;
+            }
+
+            // Pre-fill name
+            document.getElementById('full_name').value = defaultName;
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saving...';
+                errMsg.classList.add('hidden');
+
+                const newProfile = {
+                    email: email,
+                    full_name: document.getElementById('full_name').value.trim(),
+                    gender: document.getElementById('gender').value,
+                    phone_number: document.getElementById('phone').value.trim(),
+                    batch: batch,
+                    branch: branch
+                    // role defaults to 'student' in the database
+                };
+
+                try {
+                    const { error } = await supabase.from('profiles').insert([newProfile]);
+                    if (error) throw error;
+                    
+                    // Success! Redirect to feed
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    console.error('Error saving profile:', error);
+                    errMsg.textContent = 'Failed to save profile. Please try again.';
+                    errMsg.classList.remove('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Save & Continue';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
