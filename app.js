@@ -29,7 +29,7 @@ async function handleRouting(session) {
             // 1. Check if user has completed onboarding (exists in profiles table)
             const { data: profile, error } = await supabaseClient
                 .from('profiles')
-                .select('email')
+                .select('email, role')
                 .eq('email', email)
                 .maybeSingle();
 
@@ -39,6 +39,11 @@ async function handleRouting(session) {
                     window.location.href = 'onboarding.html';
                 }
             } else {
+                // Unhide admin navigation links if they have privileges
+                if (profile.role !== 'student') {
+                    document.querySelectorAll('.admin-link').forEach(el => el.classList.remove('hidden'));
+                }
+
                 // 3. Profile exists -> block access to login and onboarding pages
                 if (isLoginPage || isOnboardingPage) {
                     window.location.href = 'index.html';
