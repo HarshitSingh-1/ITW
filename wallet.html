@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wallet - IIITNR Events</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- QR Code Library via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .qr-code-container img {
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <h1 class="text-xl font-bold text-gray-900">IIITNR Events</h1>
+                    <div class="hidden md:flex space-x-4">
+                        <a href="index.html" class="text-gray-500 hover:text-gray-900 font-medium px-3 py-2 rounded-md">Home</a>
+                        <a href="wallet.html" class="text-blue-600 font-medium px-3 py-2 rounded-md">My Wallet</a>
+                        <a href="history.html" class="text-gray-500 hover:text-gray-900 font-medium px-3 py-2 rounded-md">History</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="user-email-display" class="text-sm text-gray-600 hidden md:block"></span>
+                    <button id="logout-btn" class="bg-red-50 hover:text-red-700 text-red-600 px-4 py-2 rounded-md text-sm font-medium transition-colors border border-red-200">
+                        Log Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="p-4 sm:p-8 max-w-7xl mx-auto">
+        <div class="mb-6">
+            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Digital Wallet</h2>
+            <p class="text-gray-500 mt-1">Present these QR codes at the gate for entry.</p>
+        </div>
+
+        <div id="tickets-loading" class="text-center py-12 text-gray-500">
+            <svg class="animate-spin h-8 w-8 mx-auto mb-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Loading your tickets...
+        </div>
+        
+        <div id="tickets-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 hidden">
+            <!-- Ticket Cards injected here -->
+        </div>
+        
+        <div id="no-tickets-msg" class="hidden text-center py-12 text-gray-500 bg-white rounded-lg border border-gray-200 border-dashed">
+            You don't have any active tickets yet. <br>
+            <a href="index.html" class="text-blue-600 hover:underline mt-2 inline-block">Browse upcoming events</a>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const supabase = window.app.supabase;
+            const ticketsGrid = document.getElementById('tickets-grid');
+            const loading = document.getElementById('tickets-loading');
+            const noTicketsMsg = document.getElementById('no-tickets-msg');
+            const emailDisplay = document.getElementById('user-email-display');
+
+            // Wait for session
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return; // app.js handles redirect
+            const userEmail = session.user.email;
+            if(emailDisplay) emailDisplay.textContent = userEmail;
+
+            async function fetchTickets() {
+                try {
+                    // Fetch tickets joined with event data
+                    // Only fetch tickets where the event hasn't happened yet (or keep all and let history.html handle past ones)
+                    // For the wallet, usually you only want active ones. Let's fetch where event_date >= now.
+                    const { data: tickets, error } = await supabase
+                        .from('tickets')
+                        .select('*, events!inner(*)') // !inner ensures we only get tickets where the event exists
+                        .eq('student_email', userEmail)
+                        .gte('events.event_date', new Date().toISOString())
+                        .order('created_at', { ascending: false });
+
+                    if (error) throw error;
+
+                    loading.classList.add('hidden');
+
+                    if (tickets.length === 0) {
+                        noTicketsMsg.classList.remove('hidden');
+                        return;
+                    }
+
+                    ticketsGrid.classList.remove('hidden');
+
+                    tickets.forEach(ticket => {
+                        const event = ticket.events;
+                        const dateObj = new Date(event.event_date);
+                        const dateString = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+                        const timeString = dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
+                        const card = document.createElement('div');
+                        card.className = 'bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden flex flex-col relative';
+                        
+                        // Scanned watermark/overlay
+                        let scannedOverlay = '';
+                        if (ticket.is_scanned) {
+                            scannedOverlay = `
+                                <div class="absolute inset-0 bg-white/70 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                                    <div class="border-4 border-red-500 text-red-500 px-6 py-2 rounded-lg font-bold text-2xl transform -rotate-12 tracking-widest uppercase">
+                                        Used
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        // Ticket ID (first 8 chars for aesthetics)
+                        const shortId = ticket.id.substring(0, 8).toUpperCase();
+
+                        card.innerHTML = `
+                            ${scannedOverlay}
+                            <!-- Top section (Event details) -->
+                            <div class="p-6 bg-blue-600 text-white flex-grow">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="text-xl font-bold leading-tight">${event.title}</h3>
+                                </div>
+                                <div class="text-blue-100 text-sm mb-1">
+                                    ${dateString} at ${timeString}
+                                </div>
+                                <div class="text-blue-100 text-sm">
+                                    ${event.venue}
+                                </div>
+                            </div>
+                            
+                            <!-- Perforated separator -->
+                            <div class="relative h-4 bg-white">
+                                <div class="absolute -left-2 top-0 w-4 h-4 bg-gray-50 rounded-full"></div>
+                                <div class="absolute -right-2 top-0 w-4 h-4 bg-gray-50 rounded-full"></div>
+                                <div class="border-t-2 border-dashed border-gray-200 w-full absolute top-2"></div>
+                            </div>
+
+                            <!-- Bottom section (QR Code) -->
+                            <div class="p-6 bg-white text-center flex flex-col items-center">
+                                <p class="text-xs text-gray-500 mb-4 font-mono">TICKET #${shortId}</p>
+                                
+                                <!-- Container for QRCode.js to mount -->
+                                <div id="qr-${ticket.id}" class="qr-code-container mb-4 p-2 border-2 border-gray-100 rounded-lg inline-block"></div>
+                                
+                                <p class="text-xs text-gray-400">Present this code at the venue gate</p>
+                            </div>
+                        `;
+
+                        ticketsGrid.appendChild(card);
+
+                        // Generate QR Code inside the specific container
+                        if (!ticket.is_scanned) {
+                            new QRCode(document.getElementById(`qr-${ticket.id}`), {
+                                text: ticket.qr_code_string,
+                                width: 160,
+                                height: 160,
+                                colorDark : "#000000",
+                                colorLight : "#ffffff",
+                                correctLevel : QRCode.CorrectLevel.M
+                            });
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('Error fetching tickets:', error);
+                    loading.textContent = 'Failed to load tickets. Please try again.';
+                    loading.classList.add('text-red-500');
+                }
+            }
+
+            fetchTickets();
+        });
+    </script>
+</body>
+</html>
