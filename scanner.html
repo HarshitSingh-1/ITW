@@ -76,6 +76,13 @@
             // Verify auth
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
+            
+            // Verify Role
+            const { data: profile } = await supabase.from('profiles').select('role').eq('email', session.user.email).single();
+            if (!profile || profile.role === 'student') {
+                document.querySelector('main').innerHTML = '<div class="text-center py-20 text-red-500 font-bold text-2xl">Access Denied</div>';
+                return;
+            }
 
             // Initialize Scanner
             function initScanner() {

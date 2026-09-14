@@ -17,124 +17,395 @@
                     <h1 class="text-xl font-bold text-white">Admin Portal</h1>
                     <div class="hidden md:flex space-x-4">
                         <a href="index.html" class="text-gray-400 hover:text-white font-medium px-3 py-2 rounded-md text-sm">Back to Feed</a>
-                        <a href="admin.html" class="text-blue-400 font-medium px-3 py-2 rounded-md text-sm">Create Event</a>
-                        <a href="scanner.html" class="text-gray-400 hover:text-white font-medium px-3 py-2 rounded-md text-sm">Gate Scanner</a>
+                        <a href="admin.html" class="text-blue-400 font-medium px-3 py-2 rounded-md text-sm">Dashboard</a>
+                        <!-- Scanner hidden by default, shown via JS if role permits -->
+                        <a href="scanner.html" id="nav-scanner" class="text-gray-400 hover:text-white font-medium px-3 py-2 rounded-md text-sm hidden">Gate Scanner</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
                     <span id="user-email-display" class="text-sm text-gray-300 hidden md:block"></span>
-                    <button id="logout-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-200 px-4 py-2 rounded-md text-sm font-medium transition-colors border border-gray-700">
-                        Log Out
-                    </button>
+                    <button id="logout-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-200 px-4 py-2 rounded-md text-sm font-medium transition-colors border border-gray-700">Log Out</button>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="p-4 sm:p-8 max-w-3xl mx-auto">
-        <div class="mb-8">
-            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Create New Event</h2>
-            <p class="text-gray-500 mt-1">Publish an event to the campus feed.</p>
+    <main class="p-4 sm:p-8 max-w-6xl mx-auto">
+        
+        <!-- Access Denied -->
+        <div id="access-denied" class="hidden text-center py-20">
+            <svg class="mx-auto h-16 w-16 text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <h2 class="text-2xl font-bold text-gray-900">Access Denied</h2>
+            <p class="text-gray-500 mt-2">You do not have Organizer or Admin privileges.</p>
         </div>
 
-        <div id="notification-banner" class="hidden mb-6 p-4 rounded-lg text-sm font-medium"></div>
+        <!-- Dashboard Content -->
+        <div id="dashboard-content" class="hidden">
+            
+            <div id="notification-banner" class="hidden mb-6 p-4 rounded-lg text-sm font-medium"></div>
 
-        <form id="create-event-form" class="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-200">
-            <div class="space-y-6">
-                <div>
-                    <label for="title" class="block text-sm font-medium text-gray-700">Event Title *</label>
-                    <input type="text" id="title" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                        <label for="event_date" class="block text-sm font-medium text-gray-700">Date & Time *</label>
-                        <input type="datetime-local" id="event_date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label for="total_capacity" class="block text-sm font-medium text-gray-700">Total Capacity *</label>
-                        <input type="number" id="total_capacity" min="1" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="venue" class="block text-sm font-medium text-gray-700">Venue *</label>
-                    <input type="text" id="venue" placeholder="e.g. Main Auditorium" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                </div>
-
-                <div>
-                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea id="description" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
-                </div>
+            <!-- Tabs -->
+            <div class="flex space-x-6 border-b border-gray-200 mb-8 overflow-x-auto">
+                <button id="tab-events" class="border-b-2 border-blue-600 text-blue-600 font-semibold pb-3 px-1 whitespace-nowrap">My Events</button>
+                <button id="tab-create" class="border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium pb-3 px-1 whitespace-nowrap">Create Event</button>
+                <button id="tab-roles" class="border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium pb-3 px-1 whitespace-nowrap hidden">Role Management</button>
             </div>
 
-            <div class="mt-8">
-                <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                    Publish Event
+            <!-- View: Events List -->
+            <div id="view-events">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Manage Events</h2>
+                    <p class="text-sm text-gray-500" id="events-count">Loading...</p>
+                </div>
+                <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+
+            <!-- View: Manage Single Event (Attendees) -->
+            <div id="view-manage" class="hidden">
+                <button id="btn-back" class="text-blue-600 hover:underline font-medium text-sm mb-6 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Back to Events
                 </button>
+                
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-gray-900" id="manage-title">Event Title</h2>
+                        <p class="text-gray-500 text-sm mt-1" id="manage-stats">0 Booked / 0 Capacity</p>
+                    </div>
+                    <button id="btn-export-csv" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow-sm text-sm flex items-center transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Export to CSV
+                    </button>
+                </div>
+
+                <div class="bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch & Branch</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendees-table" class="bg-white divide-y divide-gray-200">
+                                <!-- JS Injection -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="attendees-loading" class="text-center py-8 text-gray-500">Loading attendees...</div>
+                </div>
             </div>
-        </form>
+
+            <!-- View: Create Event -->
+            <div id="view-create" class="hidden">
+                <form id="create-event-form" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 max-w-2xl mx-auto">
+                    <h3 class="text-lg font-bold mb-4 border-b pb-2">Create New Event</h3>
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Event Title *</label>
+                            <input type="text" id="title" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Date & Time *</label>
+                                <input type="datetime-local" id="event_date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Total Capacity *</label>
+                                <input type="number" id="total_capacity" min="1" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Venue *</label>
+                            <input type="text" id="venue" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Description</label>
+                            <textarea id="description" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" id="submit-btn" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        Publish Event
+                    </button>
+                </form>
+            </div>
+
+            <!-- View: Role Management (Super Admin) -->
+            <div id="view-roles" class="hidden max-w-2xl mx-auto">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="text-lg font-bold mb-2">Promote User Roles</h3>
+                    <p class="text-sm text-gray-500 mb-6">Assign special privileges to students. They must have logged in at least once to have a profile.</p>
+                    
+                    <form id="role-form" class="flex items-end space-x-4">
+                        <div class="flex-grow">
+                            <label class="block text-sm font-medium text-gray-700">Student Email</label>
+                            <input type="email" id="role-email" required placeholder="email@iiitnr.edu.in" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">New Role</label>
+                            <select id="role-select" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white">
+                                <option value="organizer">Organizer</option>
+                                <option value="gatekeeper">Gatekeeper</option>
+                                <option value="student">Student (Revoke)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded-md h-[42px] mb-[2px]">Update</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
     </main>
 
     <script src="app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const supabase = window.app.supabase;
-            const form = document.getElementById('create-event-form');
-            const submitBtn = document.getElementById('submit-btn');
-            const notification = document.getElementById('notification-banner');
-            const emailDisplay = document.getElementById('user-email-display');
+            let currentUserRole = 'student';
+            let currentUserEmail = '';
+            let currentEventIdForExport = null;
+            let currentAttendeesData = [];
 
-            // Session check
+            const notif = document.getElementById('notification-banner');
+            
+            function showNotif(msg, type = 'success') {
+                notif.textContent = msg;
+                notif.className = `mb-6 p-4 rounded-lg text-sm font-medium block ${type === 'success' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200'} border`;
+                setTimeout(() => notif.classList.add('hidden'), 5000);
+            }
+
+            // Auth Check
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const userEmail = session.user.email;
-            if(emailDisplay) emailDisplay.textContent = userEmail;
+            currentUserEmail = session.user.email;
+            if(document.getElementById('user-email-display')) document.getElementById('user-email-display').textContent = currentUserEmail;
 
-            function showNotification(msg, type = 'success') {
-                notification.textContent = msg;
-                notification.className = `mb-6 p-4 rounded-lg text-sm font-medium block ${type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`;
-                // Scroll to top
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                if(type === 'success') {
-                    setTimeout(() => notification.classList.add('hidden'), 5000);
+            // Fetch Role
+            const { data: profile } = await supabase.from('profiles').select('role').eq('email', currentUserEmail).single();
+            if (profile) currentUserRole = profile.role;
+
+            // Gatekeeping Access
+            if (currentUserRole === 'student') {
+                document.getElementById('access-denied').classList.remove('hidden');
+                return;
+            }
+            if (currentUserRole === 'gatekeeper') {
+                // Gatekeepers should only see scanner
+                window.location.href = 'scanner.html';
+                return;
+            }
+
+            // Allow access (Admin or Organizer)
+            document.getElementById('dashboard-content').classList.remove('hidden');
+            document.getElementById('nav-scanner').classList.remove('hidden');
+
+            if (currentUserRole === 'super_admin') {
+                document.getElementById('tab-roles').classList.remove('hidden');
+            }
+
+            // --- Tab Switching Logic ---
+            const tabs = {
+                events: { btn: document.getElementById('tab-events'), view: document.getElementById('view-events') },
+                create: { btn: document.getElementById('tab-create'), view: document.getElementById('view-create') },
+                roles: { btn: document.getElementById('tab-roles'), view: document.getElementById('view-roles') },
+                manage: { view: document.getElementById('view-manage') } // No tab button for manage
+            };
+
+            function switchTab(activeTabId) {
+                // Hide all views, reset all buttons
+                Object.keys(tabs).forEach(key => {
+                    if(tabs[key].view) tabs[key].view.classList.add('hidden');
+                    if(tabs[key].btn) {
+                        tabs[key].btn.className = 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium pb-3 px-1 whitespace-nowrap';
+                    }
+                });
+                // Activate target
+                if (activeTabId !== 'manage') {
+                    tabs[activeTabId].btn.className = 'border-b-2 border-blue-600 text-blue-600 font-semibold pb-3 px-1 whitespace-nowrap';
+                }
+                tabs[activeTabId].view.classList.remove('hidden');
+                
+                if (activeTabId === 'events') fetchEvents();
+            }
+
+            tabs.events.btn.addEventListener('click', () => switchTab('events'));
+            tabs.create.btn.addEventListener('click', () => switchTab('create'));
+            tabs.roles.btn.addEventListener('click', () => switchTab('roles'));
+            document.getElementById('btn-back').addEventListener('click', () => switchTab('events'));
+
+            // --- View: Events ---
+            async function fetchEvents() {
+                let query = supabase.from('events').select('*').order('created_at', { ascending: false });
+                if (currentUserRole !== 'super_admin') {
+                    query = query.eq('organizer_email', currentUserEmail);
+                }
+                
+                const { data: events, error } = await query;
+                if (error) { console.error(error); return; }
+
+                document.getElementById('events-count').textContent = `Showing ${events.length} events`;
+                const grid = document.getElementById('events-grid');
+                grid.innerHTML = '';
+
+                events.forEach(event => {
+                    const fill = Math.round((event.tickets_sold / event.total_capacity) * 100) || 0;
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md cursor-pointer transition-shadow flex flex-col h-full';
+                    card.onclick = () => openManageEvent(event);
+                    card.innerHTML = `
+                        <h3 class="font-bold text-lg text-gray-900 mb-1">${event.title}</h3>
+                        <p class="text-sm text-gray-500 mb-4">${new Date(event.event_date).toLocaleDateString()}</p>
+                        <div class="mt-auto">
+                            <div class="flex justify-between text-xs text-gray-600 mb-1">
+                                <span>${event.tickets_sold} Booked</span>
+                                <span>${fill}% Full</span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-1.5"><div class="bg-blue-600 h-1.5 rounded-full" style="width: ${fill}%"></div></div>
+                            <button class="mt-4 w-full border border-gray-200 rounded-md py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50">Manage Attendees</button>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+
+            // --- View: Manage Event (Attendees) ---
+            async function openManageEvent(event) {
+                switchTab('manage');
+                document.getElementById('manage-title').textContent = event.title;
+                document.getElementById('manage-stats').textContent = `${event.tickets_sold} Booked / ${event.total_capacity} Capacity`;
+                
+                const tbody = document.getElementById('attendees-table');
+                const loading = document.getElementById('attendees-loading');
+                tbody.innerHTML = '';
+                loading.classList.remove('hidden');
+
+                try {
+                    // 1. Fetch tickets
+                    const { data: tickets, error: tErr } = await supabase.from('tickets').select('*').eq('event_id', event.id);
+                    if (tErr) throw tErr;
+
+                    if (tickets.length === 0) {
+                        loading.textContent = 'No one has booked a ticket yet.';
+                        return;
+                    }
+
+                    // 2. Fetch corresponding profiles
+                    const emails = tickets.map(t => t.student_email);
+                    const { data: profiles, error: pErr } = await supabase.from('profiles').select('*').in('email', emails);
+                    if (pErr) throw pErr;
+
+                    // Map for easy lookup
+                    const profileMap = {};
+                    profiles.forEach(p => profileMap[p.email] = p);
+
+                    loading.classList.add('hidden');
+                    
+                    // Store for export
+                    currentEventIdForExport = event.title;
+                    currentAttendeesData = tickets.map(t => {
+                        const p = profileMap[t.student_email] || {};
+                        return {
+                            name: p.full_name || 'Unknown',
+                            email: t.student_email,
+                            batch: p.batch || 'N/A',
+                            branch: p.branch || 'N/A',
+                            gender: p.gender || 'N/A',
+                            scanned: t.is_scanned
+                        };
+                    });
+
+                    // Render table
+                    currentAttendeesData.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${row.name}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.email}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.batch} - ${row.branch}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                ${row.scanned 
+                                    ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Scanned</span>' 
+                                    : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Pending</span>'}
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } catch (err) {
+                    console.error(err);
+                    loading.textContent = 'Failed to load attendees.';
                 }
             }
 
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Publishing...';
+            // --- CSV Export Logic ---
+            document.getElementById('btn-export-csv').addEventListener('click', () => {
+                if (currentAttendeesData.length === 0) return alert('No data to export.');
+                
+                // Headers
+                let csvContent = "Name,Email,Batch,Branch,Gender,Status\n";
+                
+                // Rows
+                currentAttendeesData.forEach(row => {
+                    const status = row.scanned ? "Scanned (Attended)" : "Pending";
+                    csvContent += `"${row.name}","${row.email}","${row.batch}","${row.branch}","${row.gender}","${status}"\n`;
+                });
 
-                // Format the local datetime to ISO for postgres
-                const dateVal = new Date(document.getElementById('event_date').value).toISOString();
+                // Download
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", `Attendees_${currentEventIdForExport.replace(/ /g, '_')}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            // --- View: Create Event Logic ---
+            document.getElementById('create-event-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('submit-btn');
+                btn.disabled = true; btn.textContent = 'Publishing...';
 
                 const newEvent = {
                     title: document.getElementById('title').value,
                     description: document.getElementById('description').value,
-                    event_date: dateVal,
+                    event_date: new Date(document.getElementById('event_date').value).toISOString(),
                     venue: document.getElementById('venue').value,
                     total_capacity: parseInt(document.getElementById('total_capacity').value),
-                    organizer_email: userEmail // Bind securely
+                    organizer_email: currentUserEmail
                 };
 
-                try {
-                    const { error } = await supabase.from('events').insert([newEvent]);
-                    
-                    if (error) throw error;
-                    
-                    showNotification('Event successfully published! It is now live on the feed.');
-                    form.reset();
-                    
-                } catch (error) {
-                    console.error('Error creating event:', error);
-                    showNotification(`Failed to create event: ${error.message}`, 'error');
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Publish Event';
+                const { error } = await supabase.from('events').insert([newEvent]);
+                if (error) {
+                    showNotif('Failed to create event. Check permissions.', 'error');
+                } else {
+                    showNotif('Event successfully published!');
+                    e.target.reset();
+                    switchTab('events'); // go back to events feed
+                }
+                btn.disabled = false; btn.textContent = 'Publish Event';
+            });
+
+            // --- View: Role Management Logic ---
+            document.getElementById('role-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const targetEmail = document.getElementById('role-email').value;
+                const newRole = document.getElementById('role-select').value;
+                
+                const { error } = await supabase.from('profiles').update({ role: newRole }).eq('email', targetEmail);
+                if (error) {
+                    showNotif('Failed to update role. Make sure the user has logged in at least once.', 'error');
+                } else {
+                    showNotif(`Successfully updated ${targetEmail} to ${newRole.toUpperCase()}!`);
                 }
             });
+
+            // Initial load
+            fetchEvents();
         });
     </script>
 </body>
