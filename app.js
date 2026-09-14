@@ -30,7 +30,7 @@ function showError(msg) {
 async function checkSessionAndRoute() {
     const { data: { session }, error } = await supabaseClient.auth.getSession();
     const currentPage = window.location.pathname.split('/').pop();
-    const isLoginPage = currentPage === 'login.html' || currentPage === '';
+    const isLoginPage = currentPage === 'login.html';
 
     if (session) {
         const email = session.user.email;
@@ -62,7 +62,7 @@ async function checkSessionAndRoute() {
 supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log('Auth state changed:', event);
     const currentPage = window.location.pathname.split('/').pop();
-    const isLoginPage = currentPage === 'login.html' || currentPage === '';
+    const isLoginPage = currentPage === 'login.html';
 
     if (event === 'SIGNED_IN' && session) {
         const email = session.user.email;
