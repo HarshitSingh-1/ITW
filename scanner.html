@@ -10,12 +10,11 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Custom overrides for the scanner UI to look cleaner */
-        #qr-reader { border: none !important; }
-        #qr-reader__dashboard_section_csr span { display: none; }
+        /* Custom overrides for the scanner UI to look cleaner without breaking functionality */
+        #qr-reader { border: none !important; width: 100%; min-height: 300px; }
+        #qr-reader button { background-color: #2563eb !important; color: white !important; border-radius: 8px; padding: 8px 16px; border: none; cursor: pointer; font-weight: 600; margin-top: 10px; margin-bottom: 10px; }
         #qr-reader__dashboard_section_swaplink { text-decoration: none !important; color: #3b82f6 !important; font-weight: bold; }
-        #qr-reader__camera_selection { margin-bottom: 10px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 100%; max-width: 300px; }
-        #qr-reader__dashboard_section_csr button { background-color: #2563eb !important; color: white !important; border-radius: 8px; padding: 8px 16px; border: none; cursor: pointer; font-weight: 600; margin-top: 5px;}
+        #qr-reader__camera_selection { padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 100%; max-width: 300px; margin-bottom: 10px;}
     </style>
 </head>
 <body class="bg-gray-900 min-h-screen text-white">
@@ -131,7 +130,7 @@
                     // 1. Find the ticket in the database
                     const { data: ticketData, error: fetchError } = await supabase
                         .from('tickets')
-                        .select('*, events(title)')
+                        .select('*, events(title, event_date, scan_start_minutes_before)')
                         .eq('qr_code_string', decodedText)
                         .single();
 
@@ -148,7 +147,26 @@
                         return;
                     }
 
-                    // 3. Mark as scanned
+                    // 3. Check time window
+                    const now = new Date();
+                    const eventDate = new Date(ticketData.events.event_date);
+                    
+                    const bufferMs = (ticketData.events.scan_start_minutes_before || 120) * 60000;
+                    const scanStartTime = new Date(eventDate.getTime() - bufferMs);
+                    
+                    const endOfDay = new Date(eventDate);
+                    endOfDay.setHours(23, 59, 59, 999);
+
+                    if (now < scanStartTime) {
+                        showResult('error', 'Too Early', `Scanning for "${eventTitle}" starts at ${scanStartTime.toLocaleTimeString()}.`);
+                        return;
+                    }
+                    if (now > endOfDay) {
+                        showResult('error', 'Too Late', `Scanning for "${eventTitle}" ended on ${endOfDay.toLocaleDateString()}.`);
+                        return;
+                    }
+
+                    // 4. Mark as scanned
                     const { error: updateError } = await supabase
                         .from('tickets')
                         .update({ is_scanned: true })

@@ -83,19 +83,30 @@
                     </button>
                 </div>
 
-                <!-- Graphical Analytics (Phase 4) -->
-                <div id="analytics-panel" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 hidden">
+                <!-- Graphical Analytics & Gatekeeper Management -->
+                <div id="analytics-panel" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 hidden">
+                    <!-- Gatekeeper Assignment -->
+                    <div class="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col md:col-span-1">
+                        <h4 class="text-sm font-bold text-gray-900 mb-2">Assign Gatekeeper</h4>
+                        <p class="text-xs text-gray-500 mb-3">Restrict who can scan tickets for this event.</p>
+                        <form id="assign-gk-form" class="flex flex-col gap-2 mt-auto">
+                            <input type="email" id="gk-email" required placeholder="Gatekeeper Email" class="text-sm border border-gray-300 rounded px-2 py-1.5 w-full">
+                            <button type="submit" class="bg-gray-800 text-white text-sm font-bold py-1.5 rounded hover:bg-gray-900 w-full">Add Access</button>
+                        </form>
+                        <ul id="assigned-gk-list" class="mt-4 space-y-1 text-xs text-gray-700"></ul>
+                    </div>
+
                     <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col items-center">
-                        <h4 class="text-sm font-bold text-gray-500 mb-2">Gender Distribution</h4>
-                        <div class="w-full h-48 relative"><canvas id="chart-gender"></canvas></div>
+                        <h4 class="text-sm font-bold text-gray-500 mb-2">Gender</h4>
+                        <div class="w-full h-40 relative"><canvas id="chart-gender"></canvas></div>
                     </div>
                     <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col items-center">
-                        <h4 class="text-sm font-bold text-gray-500 mb-2">Branch Distribution</h4>
-                        <div class="w-full h-48 relative"><canvas id="chart-branch"></canvas></div>
+                        <h4 class="text-sm font-bold text-gray-500 mb-2">Branch</h4>
+                        <div class="w-full h-40 relative"><canvas id="chart-branch"></canvas></div>
                     </div>
                     <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col items-center">
-                        <h4 class="text-sm font-bold text-gray-500 mb-2">Batch Distribution</h4>
-                        <div class="w-full h-48 relative"><canvas id="chart-batch"></canvas></div>
+                        <h4 class="text-sm font-bold text-gray-500 mb-2">Batch</h4>
+                        <div class="w-full h-40 relative"><canvas id="chart-batch"></canvas></div>
                     </div>
                 </div>
 
@@ -143,9 +154,17 @@
                             <input type="text" id="venue" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Poster Image URL (Optional)</label>
-                            <input type="url" id="poster_url" placeholder="https://..." class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                            <p class="text-xs text-gray-500 mt-1">Paste a link to an image (e.g. from Imgur or Google Drive) to use as the event poster.</p>
+                            <label class="block text-sm font-medium text-gray-700">Poster Image (Upload)</label>
+                            <input type="file" id="poster_file" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded-md py-1 px-2">
+                            <p class="text-xs text-gray-500 mt-1">Upload a local image from your device.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Scanner Unlock Time</label>
+                            <div class="flex items-center mt-1">
+                                <input type="number" id="scan_buffer" min="0" required value="120" class="block w-24 border border-gray-300 rounded-md shadow-sm py-2 px-3 mr-2">
+                                <span class="text-sm text-gray-600">minutes before the event</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Gatekeepers can only scan tickets starting this many minutes before the event date (and until the end of the day).</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Description</label>
@@ -362,6 +381,7 @@
                     const branches = { CSE: 0, ECE: 0, DSAI: 0, 'N/A': 0 };
                     const batches = {};
 
+                    // Store for export
                     currentEventIdForExport = event.title;
                     currentAttendeesData = tickets.map(t => {
                         const p = profileMap[t.student_email] || {};
@@ -379,6 +399,35 @@
                             gender: p.gender || 'N/A',
                             scanned: t.is_scanned
                         };
+                    });
+
+                    // Fetch assigned gatekeepers
+                    const gkList = document.getElementById('assigned-gk-list');
+                    gkList.innerHTML = '';
+                    const { data: gks } = await supabase.from('event_gatekeepers').select('gatekeeper_email').eq('event_id', event.id);
+                    if (gks && gks.length > 0) {
+                        gks.forEach(g => {
+                            gkList.innerHTML += `<li class="break-all border-b pb-1">✅ ${g.gatekeeper_email}</li>`;
+                        });
+                    } else {
+                        gkList.innerHTML = '<li class="text-gray-400 italic">No restricted gatekeepers. (Global scan allowed if no RLS)</li>';
+                    }
+
+                    // Setup GK Assign Form
+                    const gkForm = document.getElementById('assign-gk-form');
+                    // clone node to remove old listeners
+                    const newGkForm = gkForm.cloneNode(true);
+                    gkForm.parentNode.replaceChild(newGkForm, gkForm);
+                    
+                    newGkForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const email = document.getElementById('gk-email').value;
+                        const { error } = await supabase.from('event_gatekeepers').insert({ event_id: event.id, gatekeeper_email: email });
+                        if (error) {
+                            alert('Failed to assign. Ensure user exists and has Gatekeeper role.');
+                        } else {
+                            openManageEvent(event); // reload
+                        }
                     });
 
                     // Render table
@@ -470,7 +519,27 @@
             document.getElementById('create-event-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const btn = document.getElementById('submit-btn');
-                btn.disabled = true; btn.textContent = 'Publishing...';
+                btn.disabled = true; btn.textContent = 'Uploading & Publishing...';
+
+                let finalPosterUrl = null;
+                const fileInput = document.getElementById('poster_file');
+                
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+                    
+                    const { data: uploadData, error: uploadError } = await supabase.storage.from('posters').upload(fileName, file);
+                    
+                    if (uploadError) {
+                        showNotif('Failed to upload image. Did you create the storage bucket?', 'error');
+                        btn.disabled = false; btn.textContent = 'Publish Event';
+                        return;
+                    }
+                    
+                    const { data: publicUrlData } = supabase.storage.from('posters').getPublicUrl(fileName);
+                    finalPosterUrl = publicUrlData.publicUrl;
+                }
 
                 const newEvent = {
                     title: document.getElementById('title').value,
@@ -479,7 +548,8 @@
                     venue: document.getElementById('venue').value,
                     total_capacity: parseInt(document.getElementById('total_capacity').value),
                     organizer_email: currentUserEmail,
-                    poster_url: document.getElementById('poster_url').value || null
+                    poster_url: finalPosterUrl,
+                    scan_start_minutes_before: parseInt(document.getElementById('scan_buffer').value) || 120
                 };
 
                 const { error } = await supabase.from('events').insert([newEvent]);

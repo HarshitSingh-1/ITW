@@ -13,15 +13,22 @@ const logoutBtn = document.getElementById('logout-btn');
 
 function showError(msg) {
     if (errorMessage) {
-        errorMessage.textContent = msg;
+        errorMessage.innerHTML = `<span class="text-red-600 font-extrabold text-base md:text-lg">${msg}</span>`;
         errorMessage.classList.remove('hidden');
     }
 }
 
 async function handleRouting(session) {
-    const currentPage = window.location.pathname.split('/').pop();
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     const isLoginPage = currentPage === 'login.html';
     const isOnboardingPage = currentPage === 'onboarding.html';
+
+    if (isLoginPage) {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('error') === 'invalid_domain') {
+            showError(`Access restricted. Please log in using your official ${ALLOWED_DOMAIN} college email ID only.`);
+        }
+    }
 
     if (session) {
         const email = session.user.email;
@@ -53,9 +60,9 @@ async function handleRouting(session) {
             // Invalid domain
             await supabaseClient.auth.signOut();
             if (isLoginPage) {
-                showError(`Access restricted. Please use your ${ALLOWED_DOMAIN} email address.`);
+                showError(`Access restricted. Please log in using your official ${ALLOWED_DOMAIN} college email ID only.`);
             } else {
-                window.location.href = 'login.html';
+                window.location.href = 'login.html?error=invalid_domain';
             }
         }
     } else {
