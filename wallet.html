@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- QR Code Library via CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>
         .qr-code-container img {
@@ -104,10 +105,26 @@
                     tickets.forEach(ticket => {
                         const event = ticket.events;
                         const dateObj = new Date(event.event_date);
+                        const endDateObj = event.event_end_date ? new Date(event.event_end_date) : new Date(dateObj.getTime() + (2 * 60 * 60 * 1000));
+                        
                         const dateString = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-                        const timeString = dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                        let timeString = dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                        if (event.event_end_date) {
+                            const eD = new Date(event.event_end_date);
+                            if (dateObj.toDateString() === eD.toDateString()) {
+                                timeString += ` - ${eD.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
+                            }
+                        }
 
+                        // Google Calendar URL formatting
+                        function formatGCalDate(d) { return d.toISOString().replace(/-|:|\.\d\d\d/g, ""); }
+                        const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${formatGCalDate(dateObj)}/${formatGCalDate(endDateObj)}&details=${encodeURIComponent(event.description || 'College Event')}&location=${encodeURIComponent(event.venue)}`;
+
+                        const cardWrap = document.createElement('div');
+                        cardWrap.className = 'flex flex-col gap-3';
+                        
                         const card = document.createElement('div');
+                        card.id = `ticket-card-${ticket.id}`;
                         card.className = 'bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden flex flex-col relative';
                         
                         // Scanned watermark/overlay
@@ -158,7 +175,23 @@
                             </div>
                         `;
 
-                        ticketsGrid.appendChild(card);
+                        // Action Buttons
+                        const actions = document.createElement('div');
+                        actions.className = 'grid grid-cols-2 gap-2 mt-1';
+                        actions.innerHTML = `
+                            <a href="${gCalUrl}" target="_blank" class="text-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Calendar
+                            </a>
+                            <button id="download-${ticket.id}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Download
+                            </button>
+                        `;
+
+                        cardWrap.appendChild(card);
+                        cardWrap.appendChild(actions);
+                        ticketsGrid.appendChild(cardWrap);
 
                         // Generate QR Code inside the specific container
                         if (!ticket.is_scanned) {
@@ -171,6 +204,19 @@
                                 correctLevel : QRCode.CorrectLevel.M
                             });
                         }
+
+                        // Download Logic
+                        document.getElementById(`download-${ticket.id}`).addEventListener('click', () => {
+                            html2canvas(document.getElementById(`ticket-card-${ticket.id}`), {
+                                scale: 2, // High resolution
+                                backgroundColor: null
+                            }).then(canvas => {
+                                const link = document.createElement('a');
+                                link.download = `Ticket_${event.title.replace(/\s+/g, '_')}.png`;
+                                link.href = canvas.toDataURL('image/png');
+                                link.click();
+                            });
+                        });
                     });
 
                 } catch (error) {

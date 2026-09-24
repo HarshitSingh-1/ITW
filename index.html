@@ -212,7 +212,18 @@
                 document.getElementById('sticky-title').textContent = event.title;
                 
                 const d = new Date(event.event_date);
-                document.getElementById('detail-date').textContent = `${d.toLocaleDateString()} at ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                
+                let timeStr = `${d.toLocaleDateString()} at ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                if (event.event_end_date) {
+                    const eD = new Date(event.event_end_date);
+                    if (d.toDateString() === eD.toDateString()) {
+                        timeStr += ` - ${eD.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                    } else {
+                        timeStr += ` to ${eD.toLocaleDateString()} ${eD.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                    }
+                }
+                
+                document.getElementById('detail-date').textContent = timeStr;
                 document.getElementById('detail-venue').textContent = event.venue;
                 document.getElementById('detail-description').innerText = event.description || 'No additional details provided.';
                 

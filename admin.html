@@ -141,17 +141,23 @@
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Date & Time *</label>
+                                <label class="block text-sm font-medium text-gray-700">Start Date & Time *</label>
                                 <input type="datetime-local" id="event_date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
                             </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">End Date & Time</label>
+                                <input type="datetime-local" id="event_end_date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Total Capacity *</label>
                                 <input type="number" id="total_capacity" min="1" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
                             </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Venue *</label>
-                            <input type="text" id="venue" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Venue *</label>
+                                <input type="text" id="venue" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Poster Image (Upload)</label>
@@ -545,6 +551,7 @@
                     title: document.getElementById('title').value,
                     description: document.getElementById('description').value,
                     event_date: new Date(document.getElementById('event_date').value).toISOString(),
+                    event_end_date: document.getElementById('event_end_date').value ? new Date(document.getElementById('event_end_date').value).toISOString() : null,
                     venue: document.getElementById('venue').value,
                     total_capacity: parseInt(document.getElementById('total_capacity').value),
                     organizer_email: currentUserEmail,
