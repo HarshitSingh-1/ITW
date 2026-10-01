@@ -194,7 +194,7 @@
                 }
             }
 
-            function openDetailView(id) {
+            async function openDetailView(id) {
                 const event = eventsData.find(e => e.id === id);
                 if (!event) return;
                 
