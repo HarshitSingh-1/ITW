@@ -230,7 +230,10 @@
 
             // Auth Check
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) return;
+            if (!session) {
+                document.body.style.visibility = 'visible';
+                return;
+            }
             currentUserEmail = session.user.email;
             if(document.getElementById('user-email-display')) document.getElementById('user-email-display').textContent = currentUserEmail;
 
@@ -241,6 +244,7 @@
             // Gatekeeping Access
             if (currentUserRole === 'student') {
                 document.getElementById('access-denied').classList.remove('hidden');
+                document.body.style.visibility = 'visible';
                 return;
             }
             if (currentUserRole === 'gatekeeper') {
@@ -252,6 +256,7 @@
             // Allow access (Admin or Organizer)
             document.getElementById('dashboard-content').classList.remove('hidden');
             document.getElementById('nav-scanner').classList.remove('hidden');
+            document.body.style.visibility = 'visible';
 
             if (currentUserRole === 'super_admin' || currentUserRole === 'organizer') {
                 document.getElementById('tab-roles').classList.remove('hidden');
