@@ -427,12 +427,20 @@
                     
                     newGkForm.addEventListener('submit', async (e) => {
                         e.preventDefault();
-                        const email = document.getElementById('gk-email').value;
-                        const { error } = await supabase.from('event_gatekeepers').insert({ event_id: event.id, gatekeeper_email: email });
+                        const email = document.getElementById('gk-email').value.trim();
+                        
+                        // We use an RPC here so the database can safely upgrade the student to a gatekeeper 
+                        // and assign them to the event simultaneously, bypassing RLS restrictions.
+                        const { error } = await supabase.rpc('assign_event_gatekeeper', { 
+                            p_event_id: event.id, 
+                            p_email: email 
+                        });
+                        
                         if (error) {
-                            alert('Failed to assign. Ensure user exists and has Gatekeeper role.');
+                            alert(`Error: ${error.message}`);
                         } else {
-                            openManageEvent(event); // reload
+                            document.getElementById('gk-email').value = '';
+                            openManageEvent(event); // reload the view
                         }
                     });
 
