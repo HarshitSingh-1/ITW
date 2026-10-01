@@ -10,6 +10,7 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link rel="stylesheet" href="style.css">
     <style>
+        body { visibility: hidden; }
         /* Custom overrides for the scanner UI to look cleaner without breaking functionality */
         #qr-reader { border: none !important; width: 100%; min-height: 300px; }
         #qr-reader button { background-color: #2563eb !important; color: white !important; border-radius: 8px; padding: 8px 16px; border: none; cursor: pointer; font-weight: 600; margin-top: 10px; margin-bottom: 10px; }
@@ -73,7 +74,10 @@
 
             // Verify auth
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) return;
+            if (!session) {
+                document.body.style.visibility = 'visible';
+                return;
+            }
             
             // Verify Role / Access
             const { data: profile } = await supabase.from('profiles').select('role').eq('email', session.user.email).single();
@@ -85,8 +89,11 @@
 
             if (!isSuper && !isOrg && !hasAssignments) {
                 document.querySelector('main').innerHTML = '<div class="text-center py-20 text-red-500 font-bold text-2xl">Access Denied: You do not have scanning privileges.</div>';
+                document.body.style.visibility = 'visible';
                 return;
             }
+
+            document.body.style.visibility = 'visible';
 
             // Initialize Scanner
             function initScanner() {
