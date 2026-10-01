@@ -75,10 +75,16 @@
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
             
-            // Verify Role
+            // Verify Role / Access
             const { data: profile } = await supabase.from('profiles').select('role').eq('email', session.user.email).single();
-            if (!profile || profile.role === 'student') {
-                document.querySelector('main').innerHTML = '<div class="text-center py-20 text-red-500 font-bold text-2xl">Access Denied</div>';
+            const { data: assignments } = await supabase.from('event_gatekeepers').select('event_id').eq('gatekeeper_email', session.user.email);
+            
+            const isSuper = profile?.role === 'super_admin';
+            const isOrg = profile?.role === 'organizer';
+            const hasAssignments = assignments && assignments.length > 0;
+
+            if (!isSuper && !isOrg && !hasAssignments) {
+                document.querySelector('main').innerHTML = '<div class="text-center py-20 text-red-500 font-bold text-2xl">Access Denied: You do not have scanning privileges.</div>';
                 return;
             }
 

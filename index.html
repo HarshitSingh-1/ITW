@@ -236,14 +236,27 @@
 
                 // Button State
                 const btn = document.getElementById('book-btn');
-                if (fillPercent >= 100) {
-                    btn.textContent = 'Sold Out';
-                    btn.disabled = true;
-                    btn.className = 'bg-gray-400 text-white font-black py-3 px-10 rounded-full cursor-not-allowed shadow-none';
-                } else {
-                    btn.textContent = 'Book Ticket';
-                    btn.disabled = false;
-                    btn.className = 'bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-10 rounded-full focus:outline-none transition-transform active:scale-95 shadow-lg';
+                btn.disabled = true;
+                btn.textContent = 'Checking...';
+                btn.className = 'bg-gray-400 text-white font-black py-3 px-10 rounded-full cursor-not-allowed shadow-none';
+
+                if (userEmail) {
+                    const { data: existingTicket } = await supabase
+                        .from('tickets')
+                        .select('id')
+                        .eq('event_id', event.id)
+                        .eq('student_email', userEmail)
+                        .single();
+
+                    if (existingTicket) {
+                        btn.textContent = 'Already Booked';
+                    } else if (fillPercent >= 100) {
+                        btn.textContent = 'Sold Out';
+                    } else {
+                        btn.disabled = false;
+                        btn.textContent = 'Book Ticket';
+                        btn.className = 'bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-10 rounded-full focus:outline-none transition-transform active:scale-95 shadow-lg';
+                    }
                 }
             }
 
@@ -269,20 +282,29 @@
 
                     if (success) {
                         showNotification(`Ticket Confirmed! Go to My Wallet to view it.`);
-                        // Refresh data to update counter
-                        const { data: refreshedEvent } = await supabase.from('events').select('*').eq('id', event.id).single();
-                        if (refreshedEvent) {
-                            const index = eventsData.findIndex(e => e.id === event.id);
-                            if(index !== -1) eventsData[index] = refreshedEvent;
-                            openDetailView(event.id); // re-render counters
-                        }
+                        // Update button locally
+                        btn.textContent = 'Already Booked';
+                        btn.className = 'bg-gray-400 text-white font-black py-3 px-10 rounded-full cursor-not-allowed shadow-none';
+                        
+                        // Update Capacity Locally
+                        event.tickets_sold++;
+                        document.getElementById('detail-capacity-text').textContent = `${event.tickets_sold} / ${event.total_capacity}`;
+                        const newFill = Math.min(100, (event.tickets_sold / event.total_capacity) * 100);
+                        document.getElementById('detail-capacity-bar').style.width = `${newFill}%`;
+                        if(newFill >= 100) document.getElementById('detail-capacity-bar').classList.add('bg-red-500');
                     } else {
                         showNotification(`Failed to book. Event is sold out.`, 'error');
+                        btn.textContent = 'Sold Out';
                     }
                 } catch (err) {
-                    if (err.code === '23505') showNotification(`You already have a ticket for this event!`, 'error');
-                    else showNotification(`An error occurred.`, 'error');
-                    btn.disabled = false; btn.textContent = 'Book Ticket';
+                    if (err.code === '23505') {
+                        showNotification(`You already have a ticket for this event!`, 'error');
+                        btn.textContent = 'Already Booked';
+                    }
+                    else {
+                        showNotification(`An error occurred.`, 'error');
+                        btn.disabled = false; btn.textContent = 'Book Ticket';
+                    }
                 }
             });
 

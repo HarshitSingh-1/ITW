@@ -413,12 +413,26 @@
                     const { data: gks } = await supabase.from('event_gatekeepers').select('gatekeeper_email').eq('event_id', event.id);
                     if (gks && gks.length > 0) {
                         gks.forEach(g => {
-                            gkList.innerHTML += `<li class="break-all border-b pb-1">✅ ${g.gatekeeper_email}</li>`;
+                            const li = document.createElement('li');
+                            li.className = "flex justify-between items-center border-b pb-1 break-all";
+                            li.innerHTML = `<span>✅ ${g.gatekeeper_email}</span> <button title="Revoke Access" class="text-red-500 hover:text-red-700 font-bold ml-2 text-lg leading-none revoke-btn" data-email="${g.gatekeeper_email}">✕</button>`;
+                            gkList.appendChild(li);
+                        });
+
+                        // Attach revoke listeners
+                        gkList.querySelectorAll('.revoke-btn').forEach(btn => {
+                            btn.addEventListener('click', async (e) => {
+                                const targetEmail = e.target.getAttribute('data-email');
+                                if (confirm(`Revoke scanner access for ${targetEmail}?`)) {
+                                    const { error } = await supabase.from('event_gatekeepers').delete().eq('event_id', event.id).eq('gatekeeper_email', targetEmail);
+                                    if (error) alert(`Error revoking access: ${error.message}`);
+                                    else openManageEvent(event); // reload
+                                }
+                            });
                         });
                     } else {
-                        gkList.innerHTML = '<li class="text-gray-400 italic">No restricted gatekeepers. (Global scan allowed if no RLS)</li>';
+                        gkList.innerHTML = '<li class="text-gray-400 italic text-sm">No gatekeepers assigned.</li>';
                     }
-
                     // Setup GK Assign Form
                     const gkForm = document.getElementById('assign-gk-form');
                     // clone node to remove old listeners
