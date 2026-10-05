@@ -402,21 +402,28 @@
                 events.forEach(event => {
                     const fill = Math.round((event.tickets_sold / event.total_capacity) * 100) || 0;
                     const orgName = currentUserRole === 'super_admin' ? (orgMap[event.organizer_email] || event.organizer_email) : '';
+                    const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop';
+                    const dateObj = new Date(event.event_date);
                     
                     const card = document.createElement('div');
                     card.className = 'bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md cursor-pointer transition-shadow flex flex-col h-full';
                     card.onclick = () => openManageEvent(event);
                     card.innerHTML = `
-                        <h3 class="font-bold text-lg text-gray-900 leading-tight mb-1">${event.title}</h3>
-                        ${orgName ? `<p class="text-xs text-blue-600 font-semibold mb-2">By: ${orgName}</p>` : ''}
-                        <p class="text-sm text-gray-500 mb-4">${new Date(event.event_date).toLocaleDateString()}</p>
+                        <div class="h-32 -mx-5 -mt-5 mb-4 relative overflow-hidden rounded-t-xl">
+                            <img src="${imgUrl}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/20"></div>
+                            ${event.category && event.category !== 'General' ? `<span class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">${event.category}</span>` : ''}
+                        </div>
+                        <h3 class="font-bold text-lg text-gray-900 leading-tight mb-1 line-clamp-1">${event.title}</h3>
+                        ${orgName ? `<p class="text-xs text-blue-600 font-semibold mb-2 line-clamp-1">By: ${orgName}</p>` : ''}
+                        <p class="text-sm text-gray-500 mb-2">📅 ${dateObj.toLocaleDateString(undefined, {month:'short', day:'numeric'})} • 📍 ${event.venue || 'TBA'}</p>
                         <div class="mt-auto">
-                            <div class="flex justify-between text-xs text-gray-600 mb-1">
+                            <div class="flex justify-between text-xs font-medium text-gray-600 mb-1">
                                 <span>${event.tickets_sold} Booked</span>
                                 <span>${fill}% Full</span>
                             </div>
-                            <div class="w-full bg-gray-100 rounded-full h-1.5"><div class="bg-blue-600 h-1.5 rounded-full" style="width: ${fill}%"></div></div>
-                            <button class="mt-4 w-full border border-gray-200 rounded-md py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50">Manage Attendees</button>
+                            <div class="w-full bg-gray-100 rounded-full h-1.5"><div class="bg-blue-600 h-1.5 rounded-full transition-all" style="width: ${fill}%"></div></div>
+                            <button class="mt-4 w-full border border-gray-200 rounded-md py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 bg-white">Manage Event</button>
                         </div>
                     `;
                     grid.appendChild(card);
