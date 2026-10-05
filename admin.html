@@ -84,6 +84,24 @@
                     </button>
                 </div>
 
+                <!-- Notice Board Management -->
+                <div class="bg-blue-50 p-4 rounded-lg shadow-sm border border-blue-100 mb-8 flex flex-col md:flex-row gap-6">
+                    <div class="flex-grow">
+                        <h4 class="text-sm font-bold text-gray-900 mb-2">Post Event Notice 📢</h4>
+                        <p class="text-xs text-gray-600 mb-3">Broadcast urgent updates (venue change, delays, etc.) to all attendees.</p>
+                        <form id="post-notice-form" class="flex gap-2">
+                            <input type="text" id="notice-text" required placeholder="e.g. Venue shifted to Auditorium 2" class="text-sm border border-gray-300 rounded px-3 py-2 flex-grow focus:ring-blue-500">
+                            <button type="submit" class="bg-blue-600 text-white text-sm font-bold py-2 px-4 rounded hover:bg-blue-700 whitespace-nowrap">Post Notice</button>
+                        </form>
+                    </div>
+                    <div class="flex-grow md:max-w-md">
+                        <h4 class="text-sm font-bold text-gray-900 mb-2">Active Notices</h4>
+                        <ul id="active-notices-list" class="space-y-2 max-h-32 overflow-y-auto text-sm">
+                            <li class="text-gray-500 text-xs italic">Loading...</li>
+                        </ul>
+                    </div>
+                </div>
+
                 <!-- Graphical Analytics & Gatekeeper Management -->
                 <div id="analytics-panel" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 hidden">
                     <!-- Gatekeeper Assignment -->
@@ -286,6 +304,44 @@
                 if (viewRoles) viewRoles.remove();
             }
 
+            async function loadNotices(eventId) {
+                const list = document.getElementById('active-notices-list');
+                list.innerHTML = '<li class="text-gray-500 text-xs italic">Loading notices...</li>';
+                
+                const { data: notices, error } = await supabase.from('event_notices').select('*').eq('event_id', eventId).order('created_at', { ascending: false });
+                
+                if (error) {
+                    list.innerHTML = '<li class="text-red-500 text-xs">Error loading notices</li>';
+                    return;
+                }
+                if (notices.length === 0) {
+                    list.innerHTML = '<li class="text-gray-400 italic text-xs">No active notices.</li>';
+                    return;
+                }
+                
+                list.innerHTML = '';
+                notices.forEach(n => {
+                    const li = document.createElement('li');
+                    li.className = "flex justify-between items-start border-b pb-2 break-words text-xs";
+                    const d = new Date(n.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+                    li.innerHTML = `
+                        <div class="pr-2"><span class="font-bold text-gray-700 block">${d}</span><span class="text-gray-800">${n.notice_text}</span></div>
+                        <button title="Delete Notice" class="text-red-500 hover:text-red-700 font-bold ml-2 delete-notice-btn flex-shrink-0" data-id="${n.id}">🗑️</button>
+                    `;
+                    list.appendChild(li);
+                });
+
+                list.querySelectorAll('.delete-notice-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        if (confirm('Delete this notice?')) {
+                            const { error: delErr } = await supabase.from('event_notices').delete().eq('id', e.target.getAttribute('data-id'));
+                            if (delErr) alert('Error deleting notice');
+                            else loadNotices(eventId);
+                        }
+                    });
+                });
+            }
+
             // --- Tab Switching Logic ---
             const tabs = {
                 events: { btn: document.getElementById('tab-events'), view: document.getElementById('view-events') },
@@ -451,6 +507,30 @@
                     } else {
                         gkList.innerHTML = '<li class="text-gray-400 italic text-sm">No gatekeepers assigned.</li>';
                     }
+
+                    // Setup Notices
+                    loadNotices(event.id);
+                    const noticeForm = document.getElementById('post-notice-form');
+                    const newNoticeForm = noticeForm.cloneNode(true);
+                    noticeForm.parentNode.replaceChild(newNoticeForm, noticeForm);
+                    newNoticeForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const text = document.getElementById('notice-text').value.trim();
+                        if (!text) return;
+                        
+                        const { error } = await supabase.from('event_notices').insert([{
+                            event_id: event.id,
+                            notice_text: text
+                        }]);
+                        
+                        if (error) {
+                            alert('Error posting notice');
+                        } else {
+                            document.getElementById('notice-text').value = '';
+                            loadNotices(event.id);
+                        }
+                    });
+
                     // Setup GK Assign Form
                     const gkForm = document.getElementById('assign-gk-form');
                     // clone node to remove old listeners

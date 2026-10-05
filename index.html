@@ -97,21 +97,39 @@
                             <span id="detail-venue">Venue</span>
                         </div>
                     </div>
-
-                    <div class="prose max-w-none text-gray-600 mb-10" id="detail-description">
-                        Description goes here...
                     </div>
 
-                    <!-- Capacity Counter (Kept as requested) -->
-                    <div class="bg-blue-50 border border-blue-100 p-5 rounded-xl">
-                        <div class="flex justify-between text-sm font-bold text-gray-800 mb-2">
-                            <span>Tickets Booked</span>
-                            <span id="detail-capacity-text">0 / 0</span>
+                    <!-- Detail Tabs -->
+                    <div class="flex border-b border-gray-200 mb-6 overflow-x-auto" style="scrollbar-width: none; -ms-overflow-style: none;">
+                        <button id="tab-overview" class="detail-tab-btn border-b-2 border-blue-600 text-blue-600 font-bold px-4 py-2 whitespace-nowrap">Overview</button>
+                        <button id="tab-notices" class="detail-tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium px-4 py-2 whitespace-nowrap">Notice Board 📢</button>
+                    </div>
+
+                    <!-- Tab: Overview -->
+                    <div id="content-overview" class="detail-tab-content block">
+                        <div class="prose max-w-none text-gray-600 mb-10" id="detail-description">
+                            Description goes here...
                         </div>
-                        <div class="w-full bg-white rounded-full h-3 border border-blue-100 overflow-hidden">
-                            <div id="detail-capacity-bar" class="h-full rounded-full bg-blue-600 transition-all duration-500" style="width: 0%"></div>
+
+                        <!-- Capacity Counter (Kept as requested) -->
+                        <div class="bg-blue-50 border border-blue-100 p-5 rounded-xl">
+                            <div class="flex justify-between text-sm font-bold text-gray-800 mb-2">
+                                <span>Tickets Booked</span>
+                                <span id="detail-capacity-text">0 / 0</span>
+                            </div>
+                            <div class="w-full bg-white rounded-full h-3 border border-blue-100 overflow-hidden">
+                                <div id="detail-capacity-bar" class="h-full rounded-full bg-blue-600 transition-all duration-500" style="width: 0%"></div>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Tab: Notices -->
+                    <div id="content-notices" class="detail-tab-content hidden">
+                        <ul id="public-notices-list" class="space-y-4">
+                            <li class="text-gray-500 italic text-sm text-center py-6">Loading notices...</li>
+                        </ul>
+                    </div>
+
                 </div>
             </div>
 
@@ -347,6 +365,72 @@
                         btn.className = 'bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-10 rounded-full focus:outline-none transition-transform active:scale-95 shadow-lg';
                     }
                 }
+                
+                // Reset Tabs to Overview
+                switchDetailTab('overview');
+                loadPublicNotices(event.id);
+            }
+
+            function switchDetailTab(tabName) {
+                document.querySelectorAll('.detail-tab-btn').forEach(btn => {
+                    btn.classList.remove('border-blue-600', 'text-blue-600');
+                    btn.classList.add('border-transparent', 'text-gray-500');
+                });
+                document.querySelectorAll('.detail-tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                    content.classList.remove('block');
+                });
+                
+                if (tabName === 'overview') {
+                    document.getElementById('tab-overview').classList.add('border-blue-600', 'text-blue-600');
+                    document.getElementById('tab-overview').classList.remove('border-transparent', 'text-gray-500');
+                    document.getElementById('content-overview').classList.remove('hidden');
+                    document.getElementById('content-overview').classList.add('block');
+                } else if (tabName === 'notices') {
+                    document.getElementById('tab-notices').classList.add('border-blue-600', 'text-blue-600');
+                    document.getElementById('tab-notices').classList.remove('border-transparent', 'text-gray-500');
+                    document.getElementById('content-notices').classList.remove('hidden');
+                    document.getElementById('content-notices').classList.add('block');
+                }
+            }
+
+            document.getElementById('tab-overview').addEventListener('click', () => switchDetailTab('overview'));
+            document.getElementById('tab-notices').addEventListener('click', () => switchDetailTab('notices'));
+
+            async function loadPublicNotices(eventId) {
+                const list = document.getElementById('public-notices-list');
+                list.innerHTML = '<li class="text-gray-500 italic text-sm text-center py-6">Loading notices...</li>';
+                
+                const { data: notices, error } = await supabase.from('event_notices').select('*').eq('event_id', eventId).order('created_at', { ascending: false });
+                
+                if (error) {
+                    list.innerHTML = '<li class="text-red-500 text-sm text-center py-6">Error loading notices.</li>';
+                    return;
+                }
+                if (notices.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center py-10 bg-gray-50 rounded-xl border border-gray-100">
+                            <span class="text-4xl mb-3 block">📭</span>
+                            <p class="text-gray-500 font-medium text-sm">No announcements yet.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                list.innerHTML = '';
+                notices.forEach(n => {
+                    const d = new Date(n.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+                    const li = document.createElement('li');
+                    li.className = "bg-blue-50 border border-blue-100 p-4 rounded-xl relative shadow-sm";
+                    li.innerHTML = `
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="bg-blue-600 text-white text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded">Update</span>
+                            <span class="text-gray-500 text-xs font-bold">${d}</span>
+                        </div>
+                        <p class="text-gray-800 text-sm font-medium leading-relaxed">${n.notice_text}</p>
+                    `;
+                    list.appendChild(li);
+                });
             }
 
             // Booking Logic
