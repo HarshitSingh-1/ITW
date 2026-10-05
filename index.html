@@ -40,7 +40,28 @@
 
         <!-- VIEW 1: The Poster Grid (BookMyShow Style Home) -->
         <div id="view-feed" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <h2 class="text-3xl font-black text-gray-900 tracking-tight mb-8">Recommended Events</h2>
+            
+            <!-- Search & Filter Bar -->
+            <div class="mb-8 space-y-4">
+                <div class="relative max-w-2xl">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" id="search-input" placeholder="Search events by title, venue, or description..." class="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-shadow">
+                </div>
+                
+                <div class="flex overflow-x-auto space-x-2 pb-2" id="category-chips" style="scrollbar-width: none; -ms-overflow-style: none;">
+                    <style>#category-chips::-webkit-scrollbar { display: none; }</style>
+                    <button class="category-chip active bg-gray-900 text-white px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="All">All</button>
+                    <button class="category-chip bg-gray-100 text-gray-600 hover:bg-gray-200 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Technical">💻 Technical</button>
+                    <button class="category-chip bg-gray-100 text-gray-600 hover:bg-gray-200 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Cultural">🎭 Cultural</button>
+                    <button class="category-chip bg-gray-100 text-gray-600 hover:bg-gray-200 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Sports">⚽ Sports</button>
+                    <button class="category-chip bg-gray-100 text-gray-600 hover:bg-gray-200 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Workshop">🎓 Workshops</button>
+                    <button class="category-chip bg-gray-100 text-gray-600 hover:bg-gray-200 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="General">🎪 General</button>
+                </div>
+            </div>
+
+            <h2 class="text-3xl font-black text-gray-900 tracking-tight mb-6" id="feed-title">Recommended Events</h2>
             
             <div id="events-loading" class="text-center py-12 text-gray-500 font-medium">Loading events...</div>
             <div id="no-events-msg" class="hidden text-center py-20 text-gray-400 font-medium text-lg">No upcoming events found.</div>
@@ -141,6 +162,89 @@
             // Global variable to hold loaded events for quick access
             let eventsData = [];
 
+            let currentCategory = 'All';
+            let currentSearchTerm = '';
+
+            function renderGrid() {
+                const grid = document.getElementById('events-grid');
+                const emptyMsg = document.getElementById('no-events-msg');
+                grid.innerHTML = '';
+                let visibleCount = 0;
+
+                eventsData.forEach(event => {
+                    // Category Filter
+                    if (currentCategory !== 'All' && event.category !== currentCategory) return;
+                    
+                    // Search Filter
+                    if (currentSearchTerm) {
+                        const term = currentSearchTerm.toLowerCase();
+                        const title = event.title?.toLowerCase() || '';
+                        const venue = event.venue?.toLowerCase() || '';
+                        const desc = event.description?.toLowerCase() || '';
+                        if (!title.includes(term) && !venue.includes(term) && !desc.includes(term)) return;
+                    }
+
+                    visibleCount++;
+                    const dateObj = new Date(event.event_date);
+                    const isSoldOut = event.tickets_sold >= event.total_capacity;
+                    const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop';
+                    
+                    const card = document.createElement('div');
+                    card.className = 'poster-card relative rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white border border-gray-100';
+                    card.onclick = () => openDetailView(event.id);
+                    
+                    // Show a small category pill on the card
+                    const catPill = event.category && event.category !== 'General' 
+                        ? `<div class="absolute top-2 left-2 bg-blue-600/90 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded">${event.category}</div>` 
+                        : '';
+
+                    card.innerHTML = `
+                        <div class="aspect-[3/4] relative w-full overflow-hidden bg-gray-200">
+                            <img src="${imgUrl}" alt="${event.title}" class="w-full h-full object-cover">
+                            ${isSoldOut ? '<div class="absolute top-2 right-2 bg-black text-white text-xs font-black px-2 py-1 rounded">SOLD OUT</div>' : ''}
+                            ${catPill}
+                            <!-- Dark gradient overlay for text readability -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                            <div class="absolute bottom-0 left-0 p-4 w-full">
+                                <h3 class="text-white font-black text-lg leading-tight line-clamp-2">${event.title}</h3>
+                                <p class="text-gray-300 text-xs font-medium mt-1">${dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • ${event.venue}</p>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                if (visibleCount === 0) {
+                    grid.classList.add('hidden');
+                    emptyMsg.classList.remove('hidden');
+                    emptyMsg.textContent = "No events found matching your search.";
+                } else {
+                    grid.classList.remove('hidden');
+                    emptyMsg.classList.add('hidden');
+                }
+            }
+
+            // Bind Listeners
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                currentSearchTerm = e.target.value;
+                renderGrid();
+            });
+
+            document.querySelectorAll('.category-chip').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // Update active styling
+                    document.querySelectorAll('.category-chip').forEach(b => {
+                        b.classList.remove('active', 'bg-gray-900', 'text-white');
+                        b.classList.add('bg-gray-100', 'text-gray-600');
+                    });
+                    e.target.classList.remove('bg-gray-100', 'text-gray-600');
+                    e.target.classList.add('active', 'bg-gray-900', 'text-white');
+                    
+                    currentCategory = e.target.getAttribute('data-cat');
+                    renderGrid();
+                });
+            });
+
             async function fetchEvents() {
                 try {
                     const { data: events, error } = await supabase
@@ -153,41 +257,8 @@
                     
                     eventsData = events;
                     document.getElementById('events-loading').classList.add('hidden');
-                    const grid = document.getElementById('events-grid');
+                    renderGrid();
 
-                    if (events.length === 0) {
-                        document.getElementById('no-events-msg').classList.remove('hidden');
-                        return;
-                    }
-
-                    grid.classList.remove('hidden');
-                    grid.innerHTML = ''; 
-
-                    events.forEach(event => {
-                        const dateObj = new Date(event.event_date);
-                        const isSoldOut = event.tickets_sold >= event.total_capacity;
-                        
-                        // Default placeholder if no poster_url
-                        const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop';
-
-                        const card = document.createElement('div');
-                        card.className = 'poster-card relative rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white border border-gray-100';
-                        card.onclick = () => openDetailView(event.id);
-                        
-                        card.innerHTML = `
-                            <div class="aspect-[3/4] relative w-full overflow-hidden bg-gray-200">
-                                <img src="${imgUrl}" alt="${event.title}" class="w-full h-full object-cover">
-                                ${isSoldOut ? '<div class="absolute top-2 right-2 bg-black text-white text-xs font-black px-2 py-1 rounded">SOLD OUT</div>' : ''}
-                                <!-- Dark gradient overlay for text readability -->
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                                <div class="absolute bottom-0 left-0 p-4 w-full">
-                                    <h3 class="text-white font-black text-lg leading-tight line-clamp-2">${event.title}</h3>
-                                    <p class="text-gray-300 text-xs font-medium mt-1">${dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • ${event.venue}</p>
-                                </div>
-                            </div>
-                        `;
-                        grid.appendChild(card);
-                    });
                 } catch (err) {
                     console.error('Error fetching events:', err);
                     document.getElementById('events-loading').textContent = 'Failed to load feed.';

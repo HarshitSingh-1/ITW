@@ -136,9 +136,21 @@
                 <form id="create-event-form" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 max-w-2xl mx-auto">
                     <h3 class="text-lg font-bold mb-4 border-b pb-2">Create New Event</h3>
                     <div class="space-y-5">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Event Title *</label>
-                            <input type="text" id="title" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Event Title *</label>
+                                <input type="text" id="title" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Category *</label>
+                                <select id="category" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                                    <option value="General">General & Social</option>
+                                    <option value="Technical">Technical & Coding</option>
+                                    <option value="Cultural">Cultural</option>
+                                    <option value="Sports">Sports & Esports</option>
+                                    <option value="Workshop">Workshops & Talks</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
@@ -577,6 +589,7 @@
 
                 const newEvent = {
                     title: document.getElementById('title').value,
+                    category: document.getElementById('category').value,
                     description: document.getElementById('description').value,
                     event_date: new Date(document.getElementById('event_date').value).toISOString(),
                     event_end_date: document.getElementById('event_end_date').value ? new Date(document.getElementById('event_end_date').value).toISOString() : null,
