@@ -165,53 +165,36 @@
             let currentCategory = 'All';
             let currentSearchTerm = '';
 
-            function renderGrid() {
+            function filterGrid() {
                 const grid = document.getElementById('events-grid');
                 const emptyMsg = document.getElementById('no-events-msg');
-                grid.innerHTML = '';
                 let visibleCount = 0;
+                
+                const term = currentSearchTerm.toLowerCase().trim();
 
-                eventsData.forEach(event => {
+                document.querySelectorAll('.poster-card').forEach(card => {
+                    const eventId = card.getAttribute('data-id');
+                    const event = eventsData.find(e => e.id === eventId);
+                    if(!event) return;
+
                     // Category Filter
-                    if (currentCategory !== 'All' && event.category !== currentCategory) return;
+                    const matchCategory = currentCategory === 'All' || event.category === currentCategory;
                     
                     // Search Filter
-                    if (currentSearchTerm) {
-                        const term = currentSearchTerm.toLowerCase();
+                    let matchSearch = true;
+                    if (term) {
                         const title = event.title?.toLowerCase() || '';
                         const venue = event.venue?.toLowerCase() || '';
-                        const desc = event.description?.toLowerCase() || '';
-                        if (!title.includes(term) && !venue.includes(term) && !desc.includes(term)) return;
+                        // Removed description from search so it feels more predictable
+                        matchSearch = title.includes(term) || venue.includes(term);
                     }
 
-                    visibleCount++;
-                    const dateObj = new Date(event.event_date);
-                    const isSoldOut = event.tickets_sold >= event.total_capacity;
-                    const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop';
-                    
-                    const card = document.createElement('div');
-                    card.className = 'poster-card relative rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white border border-gray-100';
-                    card.onclick = () => openDetailView(event.id);
-                    
-                    // Show a small category pill on the card
-                    const catPill = event.category && event.category !== 'General' 
-                        ? `<div class="absolute top-2 left-2 bg-blue-600/90 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded">${event.category}</div>` 
-                        : '';
-
-                    card.innerHTML = `
-                        <div class="aspect-[3/4] relative w-full overflow-hidden bg-gray-200">
-                            <img src="${imgUrl}" alt="${event.title}" class="w-full h-full object-cover">
-                            ${isSoldOut ? '<div class="absolute top-2 right-2 bg-black text-white text-xs font-black px-2 py-1 rounded">SOLD OUT</div>' : ''}
-                            ${catPill}
-                            <!-- Dark gradient overlay for text readability -->
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                            <div class="absolute bottom-0 left-0 p-4 w-full">
-                                <h3 class="text-white font-black text-lg leading-tight line-clamp-2">${event.title}</h3>
-                                <p class="text-gray-300 text-xs font-medium mt-1">${dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • ${event.venue}</p>
-                            </div>
-                        </div>
-                    `;
-                    grid.appendChild(card);
+                    if (matchCategory && matchSearch) {
+                        card.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
                 });
 
                 if (visibleCount === 0) {
@@ -227,7 +210,7 @@
             // Bind Listeners
             document.getElementById('search-input').addEventListener('input', (e) => {
                 currentSearchTerm = e.target.value;
-                renderGrid();
+                filterGrid();
             });
 
             document.querySelectorAll('.category-chip').forEach(btn => {
@@ -241,7 +224,7 @@
                     e.target.classList.add('active', 'bg-gray-900', 'text-white');
                     
                     currentCategory = e.target.getAttribute('data-cat');
-                    renderGrid();
+                    filterGrid();
                 });
             });
 
@@ -257,7 +240,42 @@
                     
                     eventsData = events;
                     document.getElementById('events-loading').classList.add('hidden');
-                    renderGrid();
+                    
+                    // Build DOM ONCE
+                    const grid = document.getElementById('events-grid');
+                    grid.innerHTML = '';
+                    
+                    events.forEach(event => {
+                        const dateObj = new Date(event.event_date);
+                        const isSoldOut = event.tickets_sold >= event.total_capacity;
+                        const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop';
+                        
+                        const card = document.createElement('div');
+                        card.className = 'poster-card relative rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white border border-gray-100';
+                        card.setAttribute('data-id', event.id);
+                        card.onclick = () => openDetailView(event.id);
+                        
+                        const catPill = event.category && event.category !== 'General' 
+                            ? `<div class="absolute top-2 left-2 bg-blue-600/90 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded">${event.category}</div>` 
+                            : '';
+
+                        card.innerHTML = `
+                            <div class="aspect-[3/4] relative w-full overflow-hidden bg-gray-200">
+                                <img src="${imgUrl}" alt="${event.title}" class="w-full h-full object-cover">
+                                ${isSoldOut ? '<div class="absolute top-2 right-2 bg-black text-white text-xs font-black px-2 py-1 rounded">SOLD OUT</div>' : ''}
+                                ${catPill}
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                                <div class="absolute bottom-0 left-0 p-4 w-full">
+                                    <h3 class="text-white font-black text-lg leading-tight line-clamp-2">${event.title}</h3>
+                                    <p class="text-gray-300 text-xs font-medium mt-1">${dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • ${event.venue}</p>
+                                </div>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                    
+                    // Initial filter pass to ensure correct display state
+                    filterGrid();
 
                 } catch (err) {
                     console.error('Error fetching events:', err);
