@@ -11,9 +11,9 @@
     <link rel="stylesheet" href="style.css">
     <style> body { visibility: hidden; } </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="premium-bg">
     <!-- Navbar -->
-    <nav class="bg-gray-900 shadow-sm border-b border-gray-800">
+    <nav class="glass-nav sticky top-0 z-50 transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
@@ -157,11 +157,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Event Title *</label>
-                                <input type="text" id="title" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                                <input type="text" id="title" required class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Category *</label>
-                                <select id="category" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                                <select id="category" required class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                                     <option value="General">General & Social</option>
                                     <option value="Technical">Technical & Coding</option>
                                     <option value="Cultural">Cultural</option>
@@ -173,21 +173,21 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Start Date & Time *</label>
-                                <input type="datetime-local" id="event_date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                                <input type="datetime-local" id="event_date" required class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">End Date & Time</label>
-                                <input type="datetime-local" id="event_end_date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                                <input type="datetime-local" id="event_end_date" class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                             </div>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Total Capacity *</label>
-                                <input type="number" id="total_capacity" min="1" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                                <input type="number" id="total_capacity" min="1" required class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Venue *</label>
-                                <input type="text" id="venue" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                                <input type="text" id="venue" required class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                             </div>
                         </div>
                         <div>
@@ -205,7 +205,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea id="description" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></textarea>
+                            <textarea id="description" rows="3" class="glass-input mt-1 block w-full rounded-xl py-3 px-4"></textarea>
                         </div>
                     </div>
                     <button type="submit" id="submit-btn" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
@@ -223,11 +223,11 @@
                     <form id="role-form" class="flex items-end space-x-4">
                         <div class="flex-grow">
                             <label class="block text-sm font-medium text-gray-700">Student Email</label>
-                            <input type="email" id="role-email" required placeholder="email@iiitnr.edu.in" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                            <input type="email" id="role-email" required placeholder="email@iiitnr.edu.in" class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">New Role</label>
-                            <select id="role-select" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white">
+                            <select id="role-select" required class="glass-input mt-1 block w-full rounded-xl py-3 px-4 bg-white">
                                 <option value="organizer">Organizer</option>
                                 <option value="student">Student (Revoke)</option>
                             </select>
@@ -723,3 +723,4 @@
     </script>
 </body>
 </html>
+

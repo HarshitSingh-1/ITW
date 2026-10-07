@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IIITNR Events</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .poster-card:hover .poster-overlay { opacity: 1; }
+        .aspect-[3/4] { aspect-ratio: 3 / 4; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-300 min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-slate-950/80 backdrop-blur-xl border-b border-slate-800 sticky top-0 z-50 transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <h1 class="text-2xl font-black text-blue-600 tracking-tighter cursor-pointer hover:scale-105 transition-transform" onclick="window.location.reload()">EVENTS</h1>
+                    <div class="hidden md:flex space-x-4">
+                        <a href="index.html" class="text-blue-600 font-bold px-3 py-2">Home</a>
+                        <a href="wallet.html" class="text-slate-400 hover:text-white font-medium px-3 py-2 transition-colors">My Wallet</a>
+                        <a href="history.html" class="text-slate-400 hover:text-white font-medium px-3 py-2 transition-colors">History</a>
+                        <a href="admin.html" class="admin-link text-red-600 hover:text-red-800 font-bold px-3 py-2 hidden transition-colors">Admin Portal</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="user-email-display" class="text-sm text-slate-400 hidden md:block font-medium"></span>
+                    <button id="logout-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-full text-sm font-bold transition-colors">Log Out</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Application Container -->
+    <main class="w-full">
+        <div id="notification-banner" class="hidden max-w-7xl mx-auto mt-4 px-4 p-4 rounded-lg text-sm font-medium"></div>
+
+        <!-- VIEW 1: The Poster Grid (BookMyShow Style Home) -->
+        <div id="view-feed" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <!-- Hero Carousel -->
+            <div id="hero-carousel-container" class="mb-10 hidden">
+                <h2 class="text-xl font-black text-white tracking-tight mb-4">Trending Now 🔥</h2>
+                <div id="hero-carousel" class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4" style="scrollbar-width: none; -ms-overflow-style: none;">
+                    <!-- Slides injected by JS -->
+                </div>
+            </div>
+            
+            <!-- Search & Filter Bar -->
+            <div class="mb-8 space-y-4">
+                <div class="relative max-w-2xl">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" id="search-input" placeholder="Search events by title, venue, or description..." class="block w-full pl-11 pr-4 py-3 border border-slate-800 bg-slate-900 text-white placeholder-slate-500 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-shadow">
+                </div>
+                
+                <div class="flex overflow-x-auto space-x-2 pb-2" id="category-chips" style="scrollbar-width: none; -ms-overflow-style: none;">
+                    <style>#category-chips::-webkit-scrollbar { display: none; }</style>
+                    <button class="category-chip active bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="All">All</button>
+                    <button class="category-chip bg-slate-800 text-slate-300 hover:bg-slate-700 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Technical">💻 Technical</button>
+                    <button class="category-chip bg-slate-800 text-slate-300 hover:bg-slate-700 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Cultural">🎭 Cultural</button>
+                    <button class="category-chip bg-slate-800 text-slate-300 hover:bg-slate-700 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Sports">⚽ Sports</button>
+                    <button class="category-chip bg-slate-800 text-slate-300 hover:bg-slate-700 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Workshop">🎓 Workshops</button>
+                    <button class="category-chip bg-slate-800 text-slate-300 hover:bg-slate-700 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="General">🎪 General</button>
+                </div>
+            </div>
+
+            <h2 class="text-3xl font-black text-white tracking-tight mb-6" id="feed-title">Recommended Events</h2>
+            
+            <div id="events-loading" class="text-center py-12 text-slate-400 font-medium">Loading events...</div>
+            <div id="no-events-msg" class="hidden text-center py-20 text-slate-500 font-medium text-lg">No upcoming events found.</div>
+            
+            <div id="events-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 hidden">
+                <!-- Posters Injected Here -->
+            </div>
+        </div>
+
+        <!-- VIEW 2: Dedicated Event Detail Page -->
+        <div id="view-detail" class="hidden pb-24">
+            <!-- Hero Image Banner -->
+            <div class="w-full h-64 md:h-96 bg-gray-900 relative">
+                <img id="detail-hero-img" src="" alt="Event Cover" class="w-full h-full object-cover opacity-60">
+                <div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
+                <button onclick="closeDetailView()" class="absolute top-6 left-6 bg-black/50 hover:bg-black/80 text-white rounded-full p-2 backdrop-blur-sm transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+            </div>
+
+            <!-- Content Area -->
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 -mt-20 relative z-10">
+                <div class="bg-slate-900 rounded-2xl shadow-2xl shadow-black/50 border border-slate-800 p-6 md:p-10 border border-slate-800">
+                    <h1 id="detail-title" class="text-3xl md:text-5xl font-black text-white tracking-tight mb-4">Event Title</h1>
+                    
+                    <div class="flex flex-wrap gap-4 mb-8 text-sm font-medium text-slate-300">
+                        <div class="flex items-center bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
+                            <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span id="detail-date">Date & Time</span>
+                        </div>
+                        <div class="flex items-center bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
+                            <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                            <span id="detail-venue">Venue</span>
+                        </div>
+                    </div>
+
+                    <!-- Detail Tabs -->
+                    <div class="flex border-b border-slate-800 mb-6 overflow-x-auto" style="scrollbar-width: none; -ms-overflow-style: none;">
+                        <button id="tab-overview" class="detail-tab-btn border-b-2 border-blue-600 text-blue-600 font-bold px-4 py-2 whitespace-nowrap">Overview</button>
+                        <button id="tab-notices" class="detail-tab-btn border-b-2 border-transparent text-slate-400 hover:text-slate-300 font-medium px-4 py-2 whitespace-nowrap">Notice Board 📢</button>
+                        <button id="tab-discussion" class="detail-tab-btn border-b-2 border-transparent text-slate-400 hover:text-slate-300 font-medium px-4 py-2 whitespace-nowrap">Discussion 💬</button>
+                        <button id="tab-reviews" class="detail-tab-btn border-b-2 border-transparent text-slate-400 hover:text-slate-300 font-medium px-4 py-2 whitespace-nowrap">Reviews ⭐</button>
+                    </div>
+
+                    <!-- Tab: Overview -->
+                    <div id="content-overview" class="detail-tab-content block">
+                        <div class="prose max-w-none text-slate-400 mb-10" id="detail-description">
+                            Description goes here...
+                        </div>
+
+                        <!-- Capacity Counter (Kept as requested) -->
+                        <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl">
+                            <div class="flex justify-between text-sm font-bold text-slate-200 mb-2">
+                                <span>Tickets Booked</span>
+                                <span id="detail-capacity-text">0 / 0</span>
+                            </div>
+                            <div class="w-full bg-slate-900 rounded-full h-3 border border-blue-100 overflow-hidden">
+                                <div id="detail-capacity-bar" class="h-full rounded-full bg-blue-600 transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Notices -->
+                    <div id="content-notices" class="detail-tab-content hidden">
+                        <ul id="public-notices-list" class="space-y-4">
+                            <li class="text-slate-400 italic text-sm text-center py-6">Loading notices...</li>
+                        </ul>
+                    </div>
+
+                    <!-- Tab: Discussion -->
+                    <div id="content-discussion" class="detail-tab-content hidden">
+                        <div class="bg-slate-900 rounded-xl p-4 mb-6 border border-slate-800">
+                            <textarea id="new-comment-input" rows="2" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ask a question or share your thoughts..."></textarea>
+                            <div class="flex justify-between items-center mt-3">
+                                <span class="text-xs text-slate-400" id="comment-status"></span>
+                                <button id="post-comment-btn" class="bg-gray-900 text-white font-bold py-2 px-5 rounded-lg text-sm hover:bg-black transition-colors">Post</button>
+                            </div>
+                        </div>
+                        <div id="comments-list" class="space-y-5">
+                            <div class="text-center py-6 text-slate-400 italic text-sm">Loading discussion...</div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Reviews -->
+                    <div id="content-reviews" class="detail-tab-content hidden">
+                        <!-- Overall Rating -->
+                        <div id="overall-rating-container" class="flex items-center space-x-4 mb-8 hidden">
+                            <div class="text-4xl font-black text-white" id="overall-rating-score">0.0</div>
+                            <div>
+                                <div class="text-yellow-400 text-xl tracking-widest" id="overall-rating-stars">★★★★★</div>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mt-1" id="overall-rating-count">0 Reviews</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Write Review Form (Hidden by default, shown if scanned) -->
+                        <div id="write-review-container" class="bg-slate-800 rounded-xl p-5 mb-8 border border-slate-700 hidden">
+                            <h4 class="font-bold text-white mb-2">Leave a Review</h4>
+                            <p class="text-xs text-slate-400 mb-4">You attended this event! How was your experience?</p>
+                            <div class="flex space-x-2 mb-4" id="star-selector">
+                                <button class="text-3xl text-slate-400 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="1">★</button>
+                                <button class="text-3xl text-slate-400 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="2">★</button>
+                                <button class="text-3xl text-slate-400 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="3">★</button>
+                                <button class="text-3xl text-slate-400 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="4">★</button>
+                                <button class="text-3xl text-slate-400 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="5">★</button>
+                            </div>
+                            <textarea id="review-text-input" rows="2" class="w-full border border-slate-700 rounded-lg p-3 text-sm focus:ring-yellow-500 focus:border-yellow-500 bg-slate-900" placeholder="What did you like? (Optional)"></textarea>
+                            <div class="flex justify-end mt-3">
+                                <button id="post-review-btn" class="bg-gray-900 text-white font-bold py-2 px-6 rounded-lg text-sm hover:bg-black transition-colors" disabled>Submit</button>
+                            </div>
+                        </div>
+
+                        <!-- Review List -->
+                        <div id="reviews-list" class="space-y-4">
+                            <div class="text-center py-6 text-slate-400 italic text-sm">Loading reviews...</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Sticky Booking Bar -->
+            <div class="fixed bottom-0 left-0 w-full bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-50 p-4 transition-all">
+                <div class="max-w-4xl mx-auto flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-white" id="sticky-title">Event Title</p>
+                        <p class="text-xs text-green-600 font-bold">Free Entry</p>
+                    </div>
+                    <button id="book-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-10 rounded-full focus:outline-none transition-transform active:scale-95 shadow-lg">
+                        Book Ticket
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const supabase = window.app.supabase;
+            const notification = document.getElementById('notification-banner');
+            let userEmail = '';
+            let currentUserRole = 'student';
+            let currentEventId = null;
+
+            // Session
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                userEmail = session.user.email;
+                if(document.getElementById('user-email-display')) document.getElementById('user-email-display').textContent = userEmail;
+                const { data: profile } = await supabase.from('profiles').select('role').eq('email', userEmail).single();
+                if (profile) currentUserRole = profile.role;
+            }
+
+            function showNotification(msg, type = 'success') {
+                notification.textContent = msg;
+                notification.className = `max-w-7xl mx-auto mt-4 px-4 p-4 rounded-lg text-sm font-medium block ${type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setTimeout(() => notification.classList.add('hidden'), 5000);
+            }
+
+            // Expose for back button
+            window.closeDetailView = () => {
+                document.getElementById('view-detail').classList.add('hidden');
+                document.getElementById('view-feed').classList.remove('hidden');
+                window.scrollTo(0, 0);
+            };
+
+            // Global variable to hold loaded events for quick access
+            let eventsData = [];
+
+            let currentCategory = 'All';
+            let currentSearchTerm = '';
+
+            function filterGrid() {
+                const grid = document.getElementById('events-grid');
+                const emptyMsg = document.getElementById('no-events-msg');
+                let visibleCount = 0;
+                
+                const term = currentSearchTerm.toLowerCase().trim();
+
+                document.querySelectorAll('.poster-card').forEach(card => {
+                    const eventId = card.getAttribute('data-id');
+                    const event = eventsData.find(e => e.id === eventId);
+                    if(!event) return;
+
+                    // Category Filter
+                    const matchCategory = currentCategory === 'All' || event.category === currentCategory;
+                    
+                    // Search Filter
+                    let matchSearch = true;
+                    if (term) {
+                        const title = event.title?.toLowerCase() || '';
+                        const venue = event.venue?.toLowerCase() || '';
+                        // Removed description from search so it feels more predictable
+                        matchSearch = title.includes(term) || venue.includes(term);
+                    }
+
+                    if (matchCategory && matchSearch) {
+                        card.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                if (visibleCount === 0) {
+                    grid.classList.add('hidden');
+                    emptyMsg.classList.remove('hidden');
+                    emptyMsg.textContent = "No events found matching your search.";
+                } else {
+                    grid.classList.remove('hidden');
+                    emptyMsg.classList.add('hidden');
+                }
+            }
+
+            // Bind Listeners
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                currentSearchTerm = e.target.value;
+                filterGrid();
+            });
+
+            document.querySelectorAll('.category-chip').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // Update active styling
+                    document.querySelectorAll('.category-chip').forEach(b => {
+                        b.classList.remove('active', 'bg-gray-900', 'text-white');
+                        b.classList.add('bg-gray-100', 'text-slate-400');
+                    });
+                    e.target.classList.remove('bg-gray-100', 'text-slate-400');
+                    e.target.classList.add('active', 'bg-gray-900', 'text-white');
+                    
+                    currentCategory = e.target.getAttribute('data-cat');
+                    filterGrid();
+                });
+            });
+
+            async function fetchEvents() {
+                const grid = document.getElementById('events-grid');
+                const loader = document.getElementById('events-loading');
+                
+                // Show Skeletons
+                loader.classList.add('hidden');
+                grid.classList.remove('hidden');
+                grid.innerHTML = '';
+                for(let i=0; i<5; i++) {
+                    grid.innerHTML += `
+                        <div class="rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-sm animate-pulse">
+                            <div class="aspect-[3/4] bg-slate-800 w-full"></div>
+                        </div>
+                    `;
+                }
+
+                try {
+                    const { data: events, error } = await supabase
+                        .from('events')
+                        .select('*')
+                        .gte('event_date', new Date().toISOString())
+                        .order('event_date', { ascending: true });
+
+                    if (error) throw error;
+                    
+                    eventsData = events;
+                    grid.innerHTML = '';
+                    
+                    // --- Hero Carousel Logic ---
+                    const heroContainer = document.getElementById('hero-carousel-container');
+                    const heroTrack = document.getElementById('hero-carousel');
+                    
+                    if (events.length > 0) {
+                        heroContainer.classList.remove('hidden');
+                        heroTrack.innerHTML = '';
+                        
+                        // Get top 3 upcoming events by popularity
+                        const trending = [...events].sort((a,b) => b.tickets_sold - a.tickets_sold).slice(0, 3);
+                        
+                        trending.forEach(event => {
+                            const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop';
+                            const dateObj = new Date(event.event_date);
+                            
+                            const slide = document.createElement('div');
+                            slide.className = 'snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] h-64 md:h-80 rounded-3xl overflow-hidden relative cursor-pointer shadow-lg group';
+                            slide.onclick = () => openDetailView(event.id);
+                            
+                            slide.innerHTML = `
+                                <img src="${imgUrl}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                                <div class="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md flex items-center gap-1 animate-pulse">🔥 Trending</div>
+                                <div class="absolute bottom-0 left-0 p-5 md:p-6 w-full">
+                                    <h3 class="text-white font-black text-2xl md:text-3xl leading-tight mb-2 drop-shadow-md line-clamp-2">${event.title}</h3>
+                                    <p class="text-gray-200 text-xs md:text-sm font-medium">📅 ${dateObj.toLocaleDateString(undefined, {month:'short', day:'numeric'})} • 📍 ${event.venue}</p>
+                                </div>
+                            `;
+                            heroTrack.appendChild(slide);
+                        });
+                    } else {
+                        heroContainer.classList.add('hidden');
+                    }
+                    
+                    // --- Grid Logic ---
+                    events.forEach(event => {
+                        const dateObj = new Date(event.event_date);
+                        const isSoldOut = event.tickets_sold >= event.total_capacity;
+                        const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop';
+                        
+                        const card = document.createElement('div');
+                        card.className = 'poster-card relative rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-slate-900 border border-slate-800';
+                        card.setAttribute('data-id', event.id);
+                        card.onclick = () => openDetailView(event.id);
+                        
+                        const catPill = event.category && event.category !== 'General' 
+                            ? `<div class="absolute top-2 left-2 bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">${event.category}</div>` 
+                            : '';
+
+                        card.innerHTML = `
+                            <div class="aspect-[3/4] relative w-full overflow-hidden bg-slate-800">
+                                <img src="${imgUrl}" alt="${event.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                                ${isSoldOut ? '<div class="absolute top-2 right-2 bg-black/90 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded shadow-sm">SOLD OUT</div>' : ''}
+                                ${catPill}
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                                <div class="absolute bottom-0 left-0 p-4 w-full">
+                                    <h3 class="text-white font-black text-lg leading-tight line-clamp-2">${event.title}</h3>
+                                    <p class="text-slate-400 text-xs font-medium mt-1">${dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • ${event.venue}</p>
+                                </div>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                    
+                    filterGrid();
+
+                } catch (err) {
+                    console.error('Error fetching events:', err);
+                    grid.innerHTML = '';
+                    loader.classList.remove('hidden');
+                    loader.textContent = 'Failed to load feed.';
+                }
+            }
+
+            async function openDetailView(id) {
+                const event = eventsData.find(e => e.id === id);
+                if (!event) return;
+                
+                currentEventId = event.id;
+                
+                // Toggle Views
+                document.getElementById('view-feed').classList.add('hidden');
+                document.getElementById('view-detail').classList.remove('hidden');
+                window.scrollTo(0, 0);
+
+                // Populate Data
+                const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600&auto=format&fit=crop';
+                document.getElementById('detail-hero-img').src = imgUrl;
+                document.getElementById('detail-title').textContent = event.title;
+                document.getElementById('sticky-title').textContent = event.title;
+                
+                const d = new Date(event.event_date);
+                
+                let timeStr = `${d.toLocaleDateString()} at ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                if (event.event_end_date) {
+                    const eD = new Date(event.event_end_date);
+                    if (d.toDateString() === eD.toDateString()) {
+                        timeStr += ` - ${eD.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                    } else {
+                        timeStr += ` to ${eD.toLocaleDateString()} ${eD.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                    }
+                }
+                
+                document.getElementById('detail-date').textContent = timeStr;
+                document.getElementById('detail-venue').textContent = event.venue;
+                document.getElementById('detail-description').innerText = event.description || 'No additional details provided.';
+                
+                // Capacity counter
+                document.getElementById('detail-capacity-text').textContent = `${event.tickets_sold} / ${event.total_capacity}`;
+                const fillPercent = Math.min(100, (event.tickets_sold / event.total_capacity) * 100);
+                document.getElementById('detail-capacity-bar').style.width = `${fillPercent}%`;
+                if(fillPercent >= 100) document.getElementById('detail-capacity-bar').classList.add('bg-red-500');
+                else document.getElementById('detail-capacity-bar').classList.remove('bg-red-500');
+
+                // Button State
+                const btn = document.getElementById('book-btn');
+                btn.disabled = true;
+                btn.textContent = 'Checking...';
+                btn.className = 'bg-gray-400 text-white font-black py-3 px-10 rounded-full cursor-not-allowed shadow-none';
+
+                if (userEmail) {
+                    const { data: existingTicket } = await supabase
+                        .from('tickets')
+                        .select('id')
+                        .eq('event_id', event.id)
+                        .eq('student_email', userEmail)
+                        .single();
+
+                    if (existingTicket) {
+                        btn.textContent = 'Already Booked';
+                    } else if (fillPercent >= 100) {
+                        btn.textContent = 'Sold Out';
+                    } else {
+                        btn.disabled = false;
+                        btn.textContent = 'Book Ticket';
+                        btn.className = 'bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-10 rounded-full focus:outline-none transition-transform active:scale-95 shadow-lg';
+                    }
+                }
+                
+                // Reset Tabs to Overview
+                switchDetailTab('overview');
+                loadPublicNotices(event.id);
+                loadDiscussion(event.id);
+                loadReviews(event.id);
+            }
+
+            function switchDetailTab(tabName) {
+                document.querySelectorAll('.detail-tab-btn').forEach(btn => {
+                    btn.classList.remove('border-blue-600', 'text-blue-600');
+                    btn.classList.add('border-transparent', 'text-slate-400');
+                });
+                document.querySelectorAll('.detail-tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                    content.classList.remove('block');
+                });
+                
+                if (tabName === 'overview') {
+                    document.getElementById('tab-overview').classList.add('border-blue-600', 'text-blue-600');
+                    document.getElementById('tab-overview').classList.remove('border-transparent', 'text-slate-400');
+                    document.getElementById('content-overview').classList.remove('hidden');
+                    document.getElementById('content-overview').classList.add('block');
+                } else if (tabName === 'notices') {
+                    document.getElementById('tab-notices').classList.add('border-blue-600', 'text-blue-600');
+                    document.getElementById('tab-notices').classList.remove('border-transparent', 'text-slate-400');
+                    document.getElementById('content-notices').classList.remove('hidden');
+                    document.getElementById('content-notices').classList.add('block');
+                } else if (tabName === 'discussion') {
+                    document.getElementById('tab-discussion').classList.add('border-blue-600', 'text-blue-600');
+                    document.getElementById('tab-discussion').classList.remove('border-transparent', 'text-slate-400');
+                    document.getElementById('content-discussion').classList.remove('hidden');
+                    document.getElementById('content-discussion').classList.add('block');
+                } else if (tabName === 'reviews') {
+                    document.getElementById('tab-reviews').classList.add('border-blue-600', 'text-blue-600');
+                    document.getElementById('tab-reviews').classList.remove('border-transparent', 'text-slate-400');
+                    document.getElementById('content-reviews').classList.remove('hidden');
+                    document.getElementById('content-reviews').classList.add('block');
+                }
+            }
+
+            document.getElementById('tab-overview').addEventListener('click', () => switchDetailTab('overview'));
+            document.getElementById('tab-notices').addEventListener('click', () => switchDetailTab('notices'));
+            document.getElementById('tab-discussion').addEventListener('click', () => switchDetailTab('discussion'));
+            document.getElementById('tab-reviews').addEventListener('click', () => switchDetailTab('reviews'));
+
+            // Discussion Logic
+            let replyingToId = null;
+
+            async function loadDiscussion(eventId) {
+                const list = document.getElementById('comments-list');
+                list.innerHTML = '<div class="text-center py-6 text-slate-400 italic text-sm">Loading discussion...</div>';
+                
+                const event = eventsData.find(e => e.id === eventId);
+                
+                // Fetch comments, joining profiles for the full name
+                const { data: comments, error } = await supabase
+                    .from('event_comments')
+                    .select('*, profiles(full_name)')
+                    .eq('event_id', eventId)
+                    .order('created_at', { ascending: true });
+
+                // Fetch ticket holders to determine "Booked" status
+                const { data: tickets } = await supabase
+                    .from('tickets')
+                    .select('student_email')
+                    .eq('event_id', eventId);
+                    
+                const bookedEmails = new Set((tickets || []).map(t => t.student_email));
+
+                if (error) {
+                    list.innerHTML = '<div class="text-red-500 text-sm text-center py-6">Error loading discussion.</div>';
+                    return;
+                }
+                
+                if (comments.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center py-10 bg-slate-900 rounded-xl border border-slate-800">
+                            <span class="text-4xl mb-3 block">💬</span>
+                            <p class="text-slate-400 font-medium text-sm">Be the first to start the discussion!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                list.innerHTML = '';
+                
+                // Organize into threads (parents and children)
+                const threads = comments.filter(c => !c.parent_id);
+                const replies = comments.filter(c => c.parent_id);
+
+                threads.forEach(thread => {
+                    const threadEl = buildCommentUI(thread, event, bookedEmails);
+                    
+                    const threadReplies = replies.filter(r => r.parent_id === thread.id);
+                    if (threadReplies.length > 0) {
+                        const repliesContainer = document.createElement('div');
+                        repliesContainer.className = 'ml-4 md:ml-12 mt-4 space-y-4 border-l-2 border-slate-800 pl-4';
+                        threadReplies.forEach(reply => {
+                            repliesContainer.appendChild(buildCommentUI(reply, event, bookedEmails));
+                        });
+                        threadEl.appendChild(repliesContainer);
+                    }
+                    
+                    list.appendChild(threadEl);
+                });
+            }
+            
+            function buildCommentUI(comment, event, bookedEmails) {
+                const el = document.createElement('div');
+                el.className = 'bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-sm';
+                
+                const isOrganizer = comment.user_email === event.organizer_email;
+                const isBooked = bookedEmails.has(comment.user_email);
+                const canDelete = userEmail && (userEmail === comment.user_email || userEmail === event.organizer_email || currentUserRole === 'super_admin');
+                
+                let badges = '';
+                if (isOrganizer) badges += `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">Organizer</span>`;
+                else if (isBooked) badges += `<span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">Booked</span>`;
+                
+                const name = comment.profiles?.full_name || comment.user_email.split('@')[0];
+                const d = new Date(comment.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+                
+                el.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <div class="flex items-center">
+                            <span class="font-bold text-white text-sm">${name}</span>
+                            ${badges}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-slate-500 font-medium">${d}</span>
+                            ${canDelete ? `<button class="text-slate-400 hover:text-red-500 transition-colors delete-btn" data-id="${comment.id}" title="Delete comment">🗑️</button>` : ''}
+                        </div>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-2">${comment.content}</p>
+                    ${!comment.parent_id ? `<button class="text-xs text-blue-600 font-bold hover:underline reply-btn" data-id="${comment.id}">Reply</button>` : ''}
+                `;
+                
+                if (canDelete) {
+                    el.querySelector('.delete-btn').addEventListener('click', async (e) => {
+                        if (confirm('Delete this comment?')) {
+                            const { error } = await supabase.from('event_comments').delete().eq('id', comment.id);
+                            if (error) alert('Error deleting comment: ' + error.message);
+                            else loadDiscussion(currentEventId);
+                        }
+                    });
+                }
+                
+                if (!comment.parent_id) {
+                    el.querySelector('.reply-btn').addEventListener('click', (e) => {
+                        replyingToId = e.target.getAttribute('data-id');
+                        const input = document.getElementById('new-comment-input');
+                        input.placeholder = `Replying to ${name}...`;
+                        input.focus();
+                        
+                        document.getElementById('comment-status').innerHTML = `Replying to <b>${name}</b> <button class="text-red-500 hover:underline ml-1" onclick="cancelReply()">Cancel</button>`;
+                    });
+                }
+                
+                return el;
+            }
+            
+            window.cancelReply = () => {
+                replyingToId = null;
+                document.getElementById('new-comment-input').placeholder = 'Ask a question or share your thoughts...';
+                document.getElementById('comment-status').innerHTML = '';
+            };
+
+            document.getElementById('post-comment-btn').addEventListener('click', async () => {
+                if (!userEmail) {
+                    alert('You must be logged in to post a comment.');
+                    return;
+                }
+                
+                const input = document.getElementById('new-comment-input');
+                const content = input.value.trim();
+                if (!content) return;
+                
+                const btn = document.getElementById('post-comment-btn');
+                btn.disabled = true;
+                btn.textContent = 'Posting...';
+                
+                const { error } = await supabase.from('event_comments').insert([{
+                    event_id: currentEventId,
+                    user_email: userEmail,
+                    content: content,
+                    parent_id: replyingToId
+                }]);
+                
+                btn.disabled = false;
+                btn.textContent = 'Post';
+                
+                if (error) {
+                    alert('Error posting comment: ' + error.message);
+                } else {
+                    input.value = '';
+                    cancelReply();
+                    loadDiscussion(currentEventId);
+                }
+            });
+
+            async function loadPublicNotices(eventId) {
+                const list = document.getElementById('public-notices-list');
+                list.innerHTML = '<li class="text-slate-400 italic text-sm text-center py-6">Loading notices...</li>';
+                
+                const { data: notices, error } = await supabase.from('event_notices').select('*').eq('event_id', eventId).order('created_at', { ascending: false });
+                
+                if (error) {
+                    list.innerHTML = '<li class="text-red-500 text-sm text-center py-6">Error loading notices.</li>';
+                    return;
+                }
+                if (notices.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center py-10 bg-slate-900 rounded-xl border border-slate-800">
+                            <span class="text-4xl mb-3 block">📭</span>
+                            <p class="text-slate-400 font-medium text-sm">No announcements yet.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                list.innerHTML = '';
+                notices.forEach(n => {
+                    const d = new Date(n.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+                    const li = document.createElement('li');
+                    li.className = "bg-blue-50 border border-blue-100 p-4 rounded-xl relative shadow-sm";
+                    li.innerHTML = `
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="bg-blue-600 text-white text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded">Update</span>
+                            <span class="text-slate-400 text-xs font-bold">${d}</span>
+                        </div>
+                        <p class="text-slate-200 text-sm font-medium leading-relaxed">${n.notice_text}</p>
+                    `;
+                    list.appendChild(li);
+                });
+            }
+
+            // Booking Logic
+            document.getElementById('book-btn').addEventListener('click', async () => {
+                const event = eventsData.find(e => e.id === currentEventId);
+                if (!event || !userEmail) return;
+
+                const btn = document.getElementById('book-btn');
+                btn.disabled = true; btn.textContent = 'Booking...';
+
+                const randomStr = Math.random().toString(36).substring(2, 10);
+                const qrString = `TKT-${event.id}-${randomStr}`;
+
+                try {
+                    const { data: success, error } = await supabase.rpc('book_ticket_safe', {
+                        p_event_id: event.id,
+                        p_student_email: userEmail,
+                        p_qr_string: qrString
+                    });
+
+                    if (error) throw error;
+
+                    if (success) {
+                        showNotification(`Ticket Confirmed! Go to My Wallet to view it.`);
+                        // Update button locally
+                        btn.textContent = 'Already Booked';
+                        btn.className = 'bg-gray-400 text-white font-black py-3 px-10 rounded-full cursor-not-allowed shadow-none';
+                        
+                        // Update Capacity Locally
+                        event.tickets_sold++;
+                        document.getElementById('detail-capacity-text').textContent = `${event.tickets_sold} / ${event.total_capacity}`;
+                        const newFill = Math.min(100, (event.tickets_sold / event.total_capacity) * 100);
+                        document.getElementById('detail-capacity-bar').style.width = `${newFill}%`;
+                        if(newFill >= 100) document.getElementById('detail-capacity-bar').classList.add('bg-red-500');
+                    } else {
+                        showNotification(`Failed to book. Event is sold out.`, 'error');
+                        btn.textContent = 'Sold Out';
+                    }
+                } catch (err) {
+                    if (err.code === '23505') {
+                        showNotification(`You already have a ticket for this event!`, 'error');
+                        btn.textContent = 'Already Booked';
+                    }
+                    else {
+                        showNotification(`An error occurred.`, 'error');
+                        btn.disabled = false; btn.textContent = 'Book Ticket';
+                    }
+                }
+            });
+
+            // Reviews Logic
+            let currentSelectedRating = 0;
+
+            document.querySelectorAll('.star-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    currentSelectedRating = parseInt(e.target.getAttribute('data-val'));
+                    document.querySelectorAll('.star-btn').forEach(b => {
+                        if (parseInt(b.getAttribute('data-val')) <= currentSelectedRating) {
+                            b.classList.remove('text-slate-400');
+                            b.classList.add('text-yellow-400');
+                        } else {
+                            b.classList.add('text-slate-400');
+                            b.classList.remove('text-yellow-400');
+                        }
+                    });
+                    document.getElementById('post-review-btn').disabled = false;
+                });
+            });
+
+            document.getElementById('post-review-btn').addEventListener('click', async () => {
+                if (currentSelectedRating === 0) return;
+                
+                const btn = document.getElementById('post-review-btn');
+                const text = document.getElementById('review-text-input').value.trim();
+                
+                btn.disabled = true;
+                btn.textContent = 'Submitting...';
+                
+                const { error } = await supabase.from('event_reviews').insert([{
+                    event_id: currentEventId,
+                    user_email: userEmail,
+                    rating: currentSelectedRating,
+                    review_text: text || null
+                }]);
+                
+                if (error) {
+                    if (error.code === '23505') alert('You have already submitted a review for this event.');
+                    else alert('Error submitting review: ' + error.message);
+                    btn.disabled = false;
+                    btn.textContent = 'Submit';
+                } else {
+                    document.getElementById('write-review-container').classList.add('hidden');
+                    loadReviews(currentEventId);
+                }
+            });
+
+            async function loadReviews(eventId) {
+                const list = document.getElementById('reviews-list');
+                const overviewContainer = document.getElementById('overall-rating-container');
+                const writeContainer = document.getElementById('write-review-container');
+                
+                list.innerHTML = '<div class="text-center py-6 text-slate-400 italic text-sm">Loading reviews...</div>';
+                overviewContainer.classList.add('hidden');
+                writeContainer.classList.add('hidden');
+                
+                // 1. Fetch reviews
+                const { data: reviews, error } = await supabase
+                    .from('event_reviews')
+                    .select('*, profiles(full_name)')
+                    .eq('event_id', eventId)
+                    .order('created_at', { ascending: false });
+                    
+                if (error) {
+                    list.innerHTML = '<div class="text-red-500 text-sm text-center py-6">Error loading reviews.</div>';
+                    return;
+                }
+                
+                // 2. Check if user can review
+                if (userEmail) {
+                    const hasReviewed = reviews.some(r => r.user_email === userEmail);
+                    if (!hasReviewed) {
+                        // Check if they have a SCANNED ticket
+                        const { data: tkt } = await supabase.from('tickets')
+                            .select('is_scanned')
+                            .eq('event_id', eventId)
+                            .eq('student_email', userEmail)
+                            .single();
+                            
+                        if (tkt && tkt.is_scanned) {
+                            writeContainer.classList.remove('hidden');
+                            
+                            // Reset star selector state
+                            currentSelectedRating = 0;
+                            document.getElementById('review-text-input').value = '';
+                            document.getElementById('post-review-btn').disabled = true;
+                            document.getElementById('post-review-btn').textContent = 'Submit';
+                            document.querySelectorAll('.star-btn').forEach(b => {
+                                b.classList.add('text-slate-400');
+                                b.classList.remove('text-yellow-400');
+                            });
+                        }
+                    }
+                }
+                
+                if (reviews.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center py-10 bg-slate-900 rounded-xl border border-slate-800">
+                            <span class="text-4xl mb-3 block">⭐</span>
+                            <p class="text-slate-400 font-medium text-sm">No reviews yet. Be the first to attend and rate!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Calculate average rating
+                const avg = (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1);
+                document.getElementById('overall-rating-score').textContent = avg;
+                document.getElementById('overall-rating-count').textContent = `${reviews.length} Review${reviews.length > 1 ? 's' : ''}`;
+                
+                // Render stars for average
+                let avgStars = '';
+                for (let i = 1; i <= 5; i++) {
+                    if (i <= Math.round(avg)) avgStars += '★';
+                    else avgStars += '☆';
+                }
+                document.getElementById('overall-rating-stars').textContent = avgStars;
+                overviewContainer.classList.remove('hidden');
+                
+                list.innerHTML = '';
+                reviews.forEach(r => {
+                    const name = r.profiles?.full_name || r.user_email.split('@')[0];
+                    const d = new Date(r.created_at).toLocaleString([], {month:'short', day:'numeric', year:'numeric'});
+                    const canDelete = userEmail && (userEmail === r.user_email || currentUserRole === 'super_admin');
+                    
+                    let rStars = '';
+                    for (let i=1; i<=5; i++) { rStars += i <= r.rating ? '★' : '☆'; }
+                    
+                    const li = document.createElement('div');
+                    li.className = 'bg-slate-900 p-5 rounded-xl border border-slate-800 shadow-sm';
+                    li.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="font-bold text-white text-sm block">${name} <span class="text-green-600 ml-1 text-xs font-black bg-green-100 px-1.5 py-0.5 rounded">Verified Attendee</span></span>
+                                <div class="text-yellow-400 text-sm mt-0.5">${rStars}</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-500 font-medium">${d}</span>
+                                ${canDelete ? `<button class="text-slate-400 hover:text-red-500 transition-colors delete-rev-btn" data-id="${r.id}" title="Delete review">🗑️</button>` : ''}
+                            </div>
+                        </div>
+                        ${r.review_text ? `<p class="text-slate-300 text-sm leading-relaxed mt-2">${r.review_text}</p>` : ''}
+                    `;
+                    list.appendChild(li);
+                });
+
+                list.querySelectorAll('.delete-rev-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        if (confirm('Delete this review?')) {
+                            const { error } = await supabase.from('event_reviews').delete().eq('id', e.target.getAttribute('data-id'));
+                            if (error) alert('Error deleting review.');
+                            else loadReviews(eventId);
+                        }
+                    });
+                });
+            }
+
+            fetchEvents();
+        });
+    </script>
+</body>
+</html>
+

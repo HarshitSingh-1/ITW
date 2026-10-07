@@ -1,5 +1,59 @@
-/* Custom global styles beyond Tailwind can be added here */
+/* Premium Apple-style Glassmorphism Theme */
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1e293b;
+}
+
+/* Animated Gradient Background */
+@keyframes gradient-move {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.premium-bg {
+    background: linear-gradient(-45deg, #e0e7ff, #f3e8ff, #ffffff, #dbeafe, #ede9fe);
+    background-size: 400% 400%;
+    animation: gradient-move 15s ease infinite;
+    min-height: 100vh;
+}
+
+/* Glassmorphism Classes to inject everywhere */
+.glass-panel {
+    background-color: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+}
+
+.glass-nav {
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.glass-card {
+    background-color: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+}
+
+.glass-input {
+    background-color: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* Remove default scrollbars for horizontal lists */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
