@@ -16,9 +16,9 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-100 min-h-screen">
     <!-- Navbar -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
+    <nav class="bg-white/80 backdrop-blur-xl shadow-sm border-b border-gray-200/50 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
@@ -46,13 +46,12 @@
             <p class="text-gray-500 mt-1">Present these QR codes at the gate for entry.</p>
         </div>
 
-        <div id="tickets-loading" class="text-center py-12 text-gray-500">
-            <svg class="animate-spin h-8 w-8 mx-auto mb-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Loading your tickets...
+        <div id="tickets-loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="animate-pulse bg-white rounded-3xl h-[450px] shadow-sm border border-gray-100"></div>
+            <div class="animate-pulse bg-white rounded-3xl h-[450px] shadow-sm border border-gray-100 hidden md:block"></div>
         </div>
+        <!-- old loader deleted by regex -->
+            </div>
         
         <div id="tickets-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 hidden">
             <!-- Ticket Cards injected here -->
@@ -125,7 +124,7 @@
                         
                         const card = document.createElement('div');
                         card.id = `ticket-card-${ticket.id}`;
-                        card.className = 'bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden flex flex-col relative';
+                        card.className = 'bg-white rounded-[32px] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col relative transform transition-transform hover:-translate-y-2 duration-300';
                         
                         // Scanned watermark/overlay
                         let scannedOverlay = '';
@@ -144,24 +143,37 @@
 
                         card.innerHTML = `
                             ${scannedOverlay}
-                            <!-- Top section (Event details) -->
-                            <div class="p-6 bg-blue-600 text-white flex-grow">
-                                <div class="flex justify-between items-start mb-2">
-                                    <h3 class="text-xl font-bold leading-tight">${event.title}</h3>
-                                </div>
-                                <div class="text-blue-100 text-sm mb-1">
-                                    ${dateString} at ${timeString}
-                                </div>
-                                <div class="text-blue-100 text-sm">
-                                    ${event.venue}
+                            
+                            <!-- Top Section -->
+                            <div class="p-6 bg-gradient-to-br from-blue-600 to-blue-900 text-white relative flex-grow overflow-hidden">
+                                <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                                <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-black/10 rounded-full blur-2xl"></div>
+                                <div class="relative z-10">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <h3 class="text-2xl font-black leading-tight line-clamp-2">${event.title}</h3>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-blue-200 text-[10px] font-bold uppercase tracking-widest mb-0.5">Date</p>
+                                            <p class="font-medium text-sm">${dateString}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-blue-200 text-[10px] font-bold uppercase tracking-widest mb-0.5">Time</p>
+                                            <p class="font-medium text-sm">${timeString}</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <p class="text-blue-200 text-[10px] font-bold uppercase tracking-widest mb-0.5">Venue</p>
+                                        <p class="font-medium text-sm truncate">${event.venue}</p>
+                                    </div>
                                 </div>
                             </div>
                             
                             <!-- Perforated separator -->
-                            <div class="relative h-4 bg-white">
-                                <div class="absolute -left-2 top-0 w-4 h-4 bg-gray-50 rounded-full"></div>
-                                <div class="absolute -right-2 top-0 w-4 h-4 bg-gray-50 rounded-full"></div>
-                                <div class="border-t-2 border-dashed border-gray-200 w-full absolute top-2"></div>
+                            <div class="relative bg-white h-8 flex items-center -my-4 z-20">
+                                <div class="w-8 h-8 bg-gray-100 rounded-full absolute -left-4 shadow-inner"></div>
+                                <div class="w-8 h-8 bg-gray-100 rounded-full absolute -right-4 shadow-inner"></div>
+                                <div class="w-full border-t-[3px] border-dashed border-gray-200 mx-6"></div>
                             </div>
 
                             <!-- Bottom section (QR Code) -->
@@ -231,3 +243,4 @@
     </script>
 </body>
 </html>
+
