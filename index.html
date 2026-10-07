@@ -12,13 +12,13 @@
         .aspect-[3/4] { aspect-ratio: 3 / 4; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-300 min-h-screen">
+<body class="bg-[#FAFAFA] min-h-screen text-black" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 30px 30px;">
     <!-- Navbar -->
-    <nav class="bg-slate-950/80 backdrop-blur-xl border-b border-slate-800 sticky top-0 z-50 transition-all">
+    <nav class="bg-white border-b-4 border-black sticky top-0 z-50 py-1">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
-                    <h1 class="text-2xl font-black text-blue-600 tracking-tighter cursor-pointer hover:scale-105 transition-transform" onclick="window.location.reload()">EVENTS</h1>
+                    <h1 class="text-2xl font-black text-black tracking-tighter cursor-pointer uppercase border-4 border-black bg-lime-400 px-4 py-1 shadow-[4px_4px_0_0_#000] -rotate-2 hover:rotate-0 transition-all" onclick="window.location.reload()">EVENTS</h1>
                     <div class="hidden md:flex space-x-4">
                         <a href="index.html" class="text-blue-600 font-bold px-3 py-2">Home</a>
                         <a href="wallet.html" class="text-slate-400 hover:text-white font-medium px-3 py-2 transition-colors">My Wallet</a>
@@ -28,7 +28,7 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <span id="user-email-display" class="text-sm text-slate-400 hidden md:block font-medium"></span>
-                    <button id="logout-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-full text-sm font-bold transition-colors">Log Out</button>
+                    <button id="logout-btn" class="bg-white border-2 border-black text-black px-4 py-2 font-black transition-all shadow-[4px_4px_0_0_#000] hover:shadow-[2px_2px_0_0_#000] hover:translate-y-[2px] hover:translate-x-[2px] uppercase">Log Out</button>
                 </div>
             </div>
         </div>
@@ -60,7 +60,7 @@
                 
                 <div class="flex overflow-x-auto space-x-2 pb-2" id="category-chips" style="scrollbar-width: none; -ms-overflow-style: none;">
                     <style>#category-chips::-webkit-scrollbar { display: none; }</style>
-                    <button class="category-chip active bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="All">All</button>
+                    <button class="category-chip active bg-black text-white px-6 py-2 font-black uppercase whitespace-nowrap border-4 border-black shadow-[4px_4px_0_0_#000]" data-cat="All">All</button>
                     <button class="category-chip bg-slate-800 text-slate-300 hover:bg-slate-700 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Technical">💻 Technical</button>
                     <button class="category-chip bg-slate-800 text-slate-300 hover:bg-slate-700 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Cultural">🎭 Cultural</button>
                     <button class="category-chip bg-slate-800 text-slate-300 hover:bg-slate-700 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Sports">⚽ Sports</button>
@@ -93,7 +93,7 @@
             <!-- Content Area -->
             <div class="max-w-4xl mx-auto px-4 sm:px-6 -mt-20 relative z-10">
                 <div class="bg-slate-900 rounded-2xl shadow-2xl shadow-black/50 border border-slate-800 p-6 md:p-10 border border-slate-800">
-                    <h1 id="detail-title" class="text-3xl md:text-5xl font-black text-white tracking-tight mb-4">Event Title</h1>
+                    <h1 id="detail-title" class="text-4xl md:text-6xl font-black text-black tracking-tighter uppercase mb-6 text-center leading-none mt-2">Event Title</h1>
                     
                     <div class="flex flex-wrap gap-4 mb-8 text-sm font-medium text-slate-300">
                         <div class="flex items-center bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
@@ -108,10 +108,10 @@
 
                     <!-- Detail Tabs -->
                     <div class="flex border-b border-slate-800 mb-6 overflow-x-auto" style="scrollbar-width: none; -ms-overflow-style: none;">
-                        <button id="tab-overview" class="detail-tab-btn border-b-2 border-blue-600 text-blue-600 font-bold px-4 py-2 whitespace-nowrap">Overview</button>
-                        <button id="tab-notices" class="detail-tab-btn border-b-2 border-transparent text-slate-400 hover:text-slate-300 font-medium px-4 py-2 whitespace-nowrap">Notice Board 📢</button>
-                        <button id="tab-discussion" class="detail-tab-btn border-b-2 border-transparent text-slate-400 hover:text-slate-300 font-medium px-4 py-2 whitespace-nowrap">Discussion 💬</button>
-                        <button id="tab-reviews" class="detail-tab-btn border-b-2 border-transparent text-slate-400 hover:text-slate-300 font-medium px-4 py-2 whitespace-nowrap">Reviews ⭐</button>
+                        <button id="tab-overview" class="detail-tab-btn border-4 border-black bg-lime-400 shadow-[4px_4px_0_0_#000] text-black font-black uppercase px-6 py-2 mr-4 whitespace-nowrap hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0_0_#000] transition-all">Overview</button>
+                        <button id="tab-notices" class="detail-tab-btn border-4 border-black bg-white shadow-[4px_4px_0_0_#000] text-black font-black uppercase px-6 py-2 mr-4 whitespace-nowrap hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0_0_#000] transition-all">Notice Board 📢</button>
+                        <button id="tab-discussion" class="detail-tab-btn border-4 border-black bg-white shadow-[4px_4px_0_0_#000] text-black font-black uppercase px-6 py-2 mr-4 whitespace-nowrap hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0_0_#000] transition-all">Discussion 💬</button>
+                        <button id="tab-reviews" class="detail-tab-btn border-4 border-black bg-white shadow-[4px_4px_0_0_#000] text-black font-black uppercase px-6 py-2 mr-4 whitespace-nowrap hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0_0_#000] transition-all">Reviews ⭐</button>
                     </div>
 
                     <!-- Tab: Overview -->
@@ -195,9 +195,9 @@
                 <div class="max-w-4xl mx-auto flex justify-between items-center">
                     <div>
                         <p class="font-bold text-white" id="sticky-title">Event Title</p>
-                        <p class="text-xs text-green-600 font-bold">Free Entry</p>
+                        <p class="text-sm text-black font-bold uppercase bg-white border-2 border-black inline-block px-2 mt-1 shadow-[2px_2px_0_0_#000]">Free Entry</p>
                     </div>
-                    <button id="book-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-10 rounded-full focus:outline-none transition-transform active:scale-95 shadow-lg">
+                    <button id="book-btn" class="bg-black text-white font-black py-4 px-10 border-4 border-black shadow-[6px_6px_0_0_rgba(255,255,255,1)] hover:bg-white hover:text-black transition-all active:translate-y-[4px] active:translate-x-[4px] active:shadow-[2px_2px_0_0_#000] uppercase text-lg">
                         Book Ticket
                     </button>
                 </div>
@@ -293,15 +293,15 @@
 
             document.querySelectorAll('.category-chip').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    // Update active styling
                     document.querySelectorAll('.category-chip').forEach(b => {
-                        b.classList.remove('active', 'bg-gray-900', 'text-white');
-                        b.classList.add('bg-gray-100', 'text-slate-400');
+                        b.classList.remove('active', 'bg-black', 'text-white');
+                        b.classList.add('bg-white', 'text-black', 'hover:bg-yellow-400', 'hover:-translate-y-[2px]', 'hover:-translate-x-[2px]', 'hover:shadow-[6px_6px_0_0_#000]');
                     });
-                    e.target.classList.remove('bg-gray-100', 'text-slate-400');
-                    e.target.classList.add('active', 'bg-gray-900', 'text-white');
+                    const clicked = e.currentTarget;
+                    clicked.classList.add('active', 'bg-black', 'text-white');
+                    clicked.classList.remove('bg-white', 'text-black', 'hover:bg-yellow-400', 'hover:-translate-y-[2px]', 'hover:-translate-x-[2px]', 'hover:shadow-[6px_6px_0_0_#000]');
                     
-                    currentCategory = e.target.getAttribute('data-cat');
+                    activeCategory = clicked.getAttribute('data-cat');
                     filterGrid();
                 });
             });
@@ -350,13 +350,13 @@
                             const dateObj = new Date(event.event_date);
                             
                             const slide = document.createElement('div');
-                            slide.className = 'snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] h-64 md:h-80 rounded-3xl overflow-hidden relative cursor-pointer shadow-lg group';
+                            slide.className = 'snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] h-64 md:h-80 border-4 border-black shadow-[8px_8px_0_0_#000] bg-white relative cursor-pointer group transition-all hover:translate-y-[4px] hover:translate-x-[4px] hover:shadow-[4px_4px_0_0_#000]';
                             slide.onclick = () => openDetailView(event.id);
                             
                             slide.innerHTML = `
                                 <img src="${imgUrl}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-                                <div class="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md flex items-center gap-1 animate-pulse">🔥 Trending</div>
+                                <div class="absolute top-4 left-4 bg-yellow-400 text-black border-4 border-black text-xs font-black uppercase tracking-widest px-3 py-1 shadow-[4px_4px_0_0_#000] flex items-center gap-1 animate-bounce">🔥 Trending</div>
                                 <div class="absolute bottom-0 left-0 p-5 md:p-6 w-full">
                                     <h3 class="text-white font-black text-2xl md:text-3xl leading-tight mb-2 drop-shadow-md line-clamp-2">${event.title}</h3>
                                     <p class="text-gray-200 text-xs md:text-sm font-medium">📅 ${dateObj.toLocaleDateString(undefined, {month:'short', day:'numeric'})} • 📍 ${event.venue}</p>
@@ -375,18 +375,16 @@
                         const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop';
                         
                         const card = document.createElement('div');
-                        card.className = 'poster-card relative rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-slate-900 border border-slate-800';
+                        card.className = 'poster-card relative border-4 border-black bg-white cursor-pointer shadow-[6px_6px_0_0_#000] hover:shadow-[2px_2px_0_0_#000] transition-all duration-200 transform hover:translate-y-[4px] hover:translate-x-[4px] overflow-hidden flex flex-col';
                         card.setAttribute('data-id', event.id);
                         card.onclick = () => openDetailView(event.id);
                         
-                        const catPill = event.category && event.category !== 'General' 
-                            ? `<div class="absolute top-2 left-2 bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">${event.category}</div>` 
-                            : '';
+                        const catPill = event.category && event.category !== 'General' ? `<div class="absolute top-2 left-2 bg-pink-400 border-2 border-black text-black text-[10px] font-black px-2 py-1 shadow-[2px_2px_0_0_#000] uppercase">${event.category}</div>` : '';
 
                         card.innerHTML = `
                             <div class="aspect-[3/4] relative w-full overflow-hidden bg-slate-800">
                                 <img src="${imgUrl}" alt="${event.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                                ${isSoldOut ? '<div class="absolute top-2 right-2 bg-black/90 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded shadow-sm">SOLD OUT</div>' : ''}
+                                ${isSoldOut ? '<div class="absolute top-2 right-2 bg-red-500 border-2 border-black text-white text-[10px] font-black px-2 py-1 shadow-[2px_2px_0_0_#000] uppercase">SOLD OUT</div>' : ''}
                                 ${catPill}
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                                 <div class="absolute bottom-0 left-0 p-4 w-full">
@@ -482,8 +480,8 @@
 
             function switchDetailTab(tabName) {
                 document.querySelectorAll('.detail-tab-btn').forEach(btn => {
-                    btn.classList.remove('border-blue-600', 'text-blue-600');
-                    btn.classList.add('border-transparent', 'text-slate-400');
+                    btn.classList.remove('bg-lime-400');
+                    btn.classList.add('bg-white');
                 });
                 document.querySelectorAll('.detail-tab-content').forEach(content => {
                     content.classList.add('hidden');
@@ -491,23 +489,23 @@
                 });
                 
                 if (tabName === 'overview') {
-                    document.getElementById('tab-overview').classList.add('border-blue-600', 'text-blue-600');
-                    document.getElementById('tab-overview').classList.remove('border-transparent', 'text-slate-400');
+                    document.getElementById('tab-overview').classList.add('bg-lime-400');
+                    document.getElementById('tab-overview').classList.remove('bg-white');
                     document.getElementById('content-overview').classList.remove('hidden');
                     document.getElementById('content-overview').classList.add('block');
                 } else if (tabName === 'notices') {
-                    document.getElementById('tab-notices').classList.add('border-blue-600', 'text-blue-600');
-                    document.getElementById('tab-notices').classList.remove('border-transparent', 'text-slate-400');
+                    document.getElementById('tab-notices').classList.add('bg-lime-400');
+                    document.getElementById('tab-notices').classList.remove('bg-white');
                     document.getElementById('content-notices').classList.remove('hidden');
                     document.getElementById('content-notices').classList.add('block');
                 } else if (tabName === 'discussion') {
-                    document.getElementById('tab-discussion').classList.add('border-blue-600', 'text-blue-600');
-                    document.getElementById('tab-discussion').classList.remove('border-transparent', 'text-slate-400');
+                    document.getElementById('tab-discussion').classList.add('bg-lime-400');
+                    document.getElementById('tab-discussion').classList.remove('bg-white');
                     document.getElementById('content-discussion').classList.remove('hidden');
                     document.getElementById('content-discussion').classList.add('block');
                 } else if (tabName === 'reviews') {
-                    document.getElementById('tab-reviews').classList.add('border-blue-600', 'text-blue-600');
-                    document.getElementById('tab-reviews').classList.remove('border-transparent', 'text-slate-400');
+                    document.getElementById('tab-reviews').classList.add('bg-lime-400');
+                    document.getElementById('tab-reviews').classList.remove('bg-white');
                     document.getElementById('content-reviews').classList.remove('hidden');
                     document.getElementById('content-reviews').classList.add('block');
                 }
