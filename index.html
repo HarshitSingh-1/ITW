@@ -5,30 +5,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IIITNR Events</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        theme: {
+                            base: 'var(--bg-base)',
+                            surface: 'var(--bg-surface)',
+                            text: 'var(--text-main)',
+                            muted: 'var(--text-muted)',
+                            border: 'var(--border-color)',
+                            accent: 'var(--accent-main)',
+                            hover: 'var(--accent-hover)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        // Apply theme immediately to prevent FOUC
+        const savedTheme = localStorage.getItem('app-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
     <style>
         .poster-card:hover .poster-overlay { opacity: 1; }
         .aspect-[3/4] { aspect-ratio: 3 / 4; }
+        
+        .category-chip {
+            background-color: var(--bg-surface);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s;
+        }
+        .category-chip:hover {
+            color: var(--text-main);
+            border-color: var(--text-muted);
+        }
+        .category-chip.active {
+            background-color: var(--text-main) !important;
+            color: var(--bg-base) !important;
+            border-color: var(--text-main) !important;
+        }
+        
+        [data-theme="brutal"] .category-chip {
+            border-radius: 0;
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0 0 var(--shadow-color);
+        }
+        [data-theme="brutal"] .category-chip.active {
+            background-color: #000 !important;
+            color: #fff !important;
+            box-shadow: 0 0 0 0 #000;
+            transform: translate(2px, 2px);
+        }
     </style>
 </head>
-<body class="bg-[#FAFAFA] min-h-screen text-black" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 30px 30px;">
+<body class="theme-bg-base min-h-screen theme-text-main transition-colors duration-300">
     <!-- Navbar -->
-    <nav class="glass-nav sticky top-0 z-50 transition-all">
+    <nav class="theme-nav-glass backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.02)] border-b theme-border sticky top-0 z-50 transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
-                    <h1 class="text-2xl font-black text-black tracking-tighter cursor-pointer uppercase border-4 border-black bg-lime-400 px-4 py-1 shadow-[4px_4px_0_0_#000] -rotate-2 hover:rotate-0 transition-all" onclick="window.location.reload()">EVENTS</h1>
+                    <h1 class="text-2xl font-black text-theme-accent tracking-tighter cursor-pointer hover:scale-105 transition-transform" onclick="window.location.reload()">EVENTS</h1>
                     <div class="hidden md:flex space-x-4">
-                        <a href="index.html" class="text-blue-600 font-bold px-3 py-2">Home</a>
-                        <a href="wallet.html" class="text-slate-400 hover:text-white font-medium px-3 py-2 transition-colors">My Wallet</a>
-                        <a href="history.html" class="text-slate-400 hover:text-white font-medium px-3 py-2 transition-colors">History</a>
+                        <a href="index.html" class="text-theme-accent font-bold px-3 py-2">Home</a>
+                        <a href="wallet.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">My Wallet</a>
+                        <a href="history.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">History</a>
                         <a href="admin.html" class="admin-link text-red-600 hover:text-red-800 font-bold px-3 py-2 hidden transition-colors">Admin Portal</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span id="user-email-display" class="text-sm text-slate-400 hidden md:block font-medium"></span>
-                    <button id="logout-btn" class="bg-white border-2 border-black text-black px-4 py-2 font-black transition-all shadow-[4px_4px_0_0_#000] hover:shadow-[2px_2px_0_0_#000] hover:translate-y-[2px] hover:translate-x-[2px] uppercase">Log Out</button>
+                    <!-- Theme Switcher -->
+                    <select id="theme-selector" class="theme-bg-surface theme-text-main theme-border border rounded-lg text-sm px-2 py-1 font-medium focus:outline-none focus:ring-2 focus:ring-theme-accent cursor-pointer">
+                        <option value="light">☀️ Light</option>
+                        <option value="dark">🌙 Dark</option>
+                        <option value="brutal">⚡ Brutal</option>
+                    </select>
+
+                    <span id="user-email-display" class="text-sm theme-text-muted hidden md:block font-medium"></span>
+                    <button id="logout-btn" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm font-bold transition-colors">Log Out</button>
                 </div>
             </div>
         </div>
@@ -43,7 +102,7 @@
             
             <!-- Hero Carousel -->
             <div id="hero-carousel-container" class="mb-10 hidden">
-                <h2 class="text-xl font-black text-white tracking-tight mb-4">Trending Now 🔥</h2>
+                <h2 class="text-xl font-black text-gray-900 tracking-tight mb-4">Trending Now 🔥</h2>
                 <div id="hero-carousel" class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4" style="scrollbar-width: none; -ms-overflow-style: none;">
                     <!-- Slides injected by JS -->
                 </div>
@@ -53,26 +112,26 @@
             <div class="mb-8 space-y-4">
                 <div class="relative max-w-2xl">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <svg class="h-5 w-5 theme-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <input type="text" id="search-input" placeholder="Search events by title, venue, or description..." class="block w-full pl-11 pr-4 py-3 border border-slate-800 bg-slate-900 text-white placeholder-slate-500 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-shadow">
+                    <input type="text" id="search-input" placeholder="Search events by title, venue, or description..." class="block w-full pl-11 pr-4 py-3 theme-bg-surface theme-text-main theme-border border rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-theme-accent focus:border-transparent text-sm transition-shadow">
                 </div>
                 
                 <div class="flex overflow-x-auto space-x-2 pb-2" id="category-chips" style="scrollbar-width: none; -ms-overflow-style: none;">
                     <style>#category-chips::-webkit-scrollbar { display: none; }</style>
-                    <button class="category-chip active bg-black text-white px-6 py-2 font-black uppercase whitespace-nowrap border-4 border-black shadow-[4px_4px_0_0_#000]" data-cat="All">All</button>
-                    <button class="category-chip bg-slate-800 text-slate-300 hover:bg-slate-700 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Technical">💻 Technical</button>
-                    <button class="category-chip bg-slate-800 text-slate-300 hover:bg-slate-700 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Cultural">🎭 Cultural</button>
-                    <button class="category-chip bg-slate-800 text-slate-300 hover:bg-slate-700 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Sports">⚽ Sports</button>
-                    <button class="category-chip bg-slate-800 text-slate-300 hover:bg-slate-700 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="Workshop">🎓 Workshops</button>
-                    <button class="category-chip bg-slate-800 text-slate-300 hover:bg-slate-700 px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors" data-cat="General">🎪 General</button>
+                    <button class="category-chip active px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap" data-cat="All">All</button>
+                    <button class="category-chip px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap" data-cat="Technical">💻 Technical</button>
+                    <button class="category-chip px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap" data-cat="Cultural">🎭 Cultural</button>
+                    <button class="category-chip px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap" data-cat="Sports">⚽ Sports</button>
+                    <button class="category-chip px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap" data-cat="Workshop">🎓 Workshops</button>
+                    <button class="category-chip px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap" data-cat="General">🎪 General</button>
                 </div>
             </div>
 
-            <h2 class="text-3xl font-black text-white tracking-tight mb-6" id="feed-title">Recommended Events</h2>
+            <h2 class="text-3xl font-black theme-text-main tracking-tight mb-6" id="feed-title">Recommended Events</h2>
             
-            <div id="events-loading" class="text-center py-12 text-slate-400 font-medium">Loading events...</div>
-            <div id="no-events-msg" class="hidden text-center py-20 text-slate-500 font-medium text-lg">No upcoming events found.</div>
+            <div id="events-loading" class="text-center py-12 theme-text-muted font-medium">Loading events...</div>
+            <div id="no-events-msg" class="hidden text-center py-20 theme-text-muted font-medium text-lg">No upcoming events found.</div>
             
             <div id="events-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 hidden">
                 <!-- Posters Injected Here -->
@@ -92,41 +151,41 @@
 
             <!-- Content Area -->
             <div class="max-w-4xl mx-auto px-4 sm:px-6 -mt-20 relative z-10">
-                <div class="bg-slate-900 rounded-2xl shadow-2xl shadow-black/50 border border-slate-800 p-6 md:p-10 border border-slate-800">
-                    <h1 id="detail-title" class="text-4xl md:text-6xl font-black text-black tracking-tighter uppercase mb-6 text-center leading-none mt-2">Event Title</h1>
+                <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-100">
+                    <h1 id="detail-title" class="text-3xl md:text-5xl font-black text-gray-900 tracking-tight mb-4">Event Title</h1>
                     
-                    <div class="flex flex-wrap gap-4 mb-8 text-sm font-medium text-slate-300">
-                        <div class="flex items-center bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
+                    <div class="flex flex-wrap gap-4 mb-8 text-sm font-medium text-gray-700">
+                        <div class="flex items-center bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
                             <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             <span id="detail-date">Date & Time</span>
                         </div>
-                        <div class="flex items-center bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
+                        <div class="flex items-center bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
                             <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
                             <span id="detail-venue">Venue</span>
                         </div>
                     </div>
 
                     <!-- Detail Tabs -->
-                    <div class="flex border-b border-slate-800 mb-6 overflow-x-auto" style="scrollbar-width: none; -ms-overflow-style: none;">
-                        <button id="tab-overview" class="detail-tab-btn border-4 border-black bg-lime-400 shadow-[4px_4px_0_0_#000] text-black font-black uppercase px-6 py-2 mr-4 whitespace-nowrap hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0_0_#000] transition-all">Overview</button>
-                        <button id="tab-notices" class="detail-tab-btn border-4 border-black bg-white shadow-[4px_4px_0_0_#000] text-black font-black uppercase px-6 py-2 mr-4 whitespace-nowrap hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0_0_#000] transition-all">Notice Board 📢</button>
-                        <button id="tab-discussion" class="detail-tab-btn border-4 border-black bg-white shadow-[4px_4px_0_0_#000] text-black font-black uppercase px-6 py-2 mr-4 whitespace-nowrap hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0_0_#000] transition-all">Discussion 💬</button>
-                        <button id="tab-reviews" class="detail-tab-btn border-4 border-black bg-white shadow-[4px_4px_0_0_#000] text-black font-black uppercase px-6 py-2 mr-4 whitespace-nowrap hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0_0_#000] transition-all">Reviews ⭐</button>
+                    <div class="flex border-b border-gray-200 mb-6 overflow-x-auto" style="scrollbar-width: none; -ms-overflow-style: none;">
+                        <button id="tab-overview" class="detail-tab-btn border-b-2 border-blue-600 text-blue-600 font-bold px-4 py-2 whitespace-nowrap">Overview</button>
+                        <button id="tab-notices" class="detail-tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium px-4 py-2 whitespace-nowrap">Notice Board 📢</button>
+                        <button id="tab-discussion" class="detail-tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium px-4 py-2 whitespace-nowrap">Discussion 💬</button>
+                        <button id="tab-reviews" class="detail-tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium px-4 py-2 whitespace-nowrap">Reviews ⭐</button>
                     </div>
 
                     <!-- Tab: Overview -->
                     <div id="content-overview" class="detail-tab-content block">
-                        <div class="prose max-w-none text-slate-400 mb-10" id="detail-description">
+                        <div class="prose max-w-none text-gray-600 mb-10" id="detail-description">
                             Description goes here...
                         </div>
 
                         <!-- Capacity Counter (Kept as requested) -->
-                        <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl">
-                            <div class="flex justify-between text-sm font-bold text-slate-200 mb-2">
+                        <div class="bg-blue-50 border border-blue-100 p-5 rounded-xl">
+                            <div class="flex justify-between text-sm font-bold text-gray-800 mb-2">
                                 <span>Tickets Booked</span>
                                 <span id="detail-capacity-text">0 / 0</span>
                             </div>
-                            <div class="w-full bg-slate-900 rounded-full h-3 border border-blue-100 overflow-hidden">
+                            <div class="w-full bg-white rounded-full h-3 border border-blue-100 overflow-hidden">
                                 <div id="detail-capacity-bar" class="h-full rounded-full bg-blue-600 transition-all duration-500" style="width: 0%"></div>
                             </div>
                         </div>
@@ -135,21 +194,21 @@
                     <!-- Tab: Notices -->
                     <div id="content-notices" class="detail-tab-content hidden">
                         <ul id="public-notices-list" class="space-y-4">
-                            <li class="text-slate-400 italic text-sm text-center py-6">Loading notices...</li>
+                            <li class="text-gray-500 italic text-sm text-center py-6">Loading notices...</li>
                         </ul>
                     </div>
 
                     <!-- Tab: Discussion -->
                     <div id="content-discussion" class="detail-tab-content hidden">
-                        <div class="bg-slate-900 rounded-xl p-4 mb-6 border border-slate-800">
+                        <div class="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
                             <textarea id="new-comment-input" rows="2" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ask a question or share your thoughts..."></textarea>
                             <div class="flex justify-between items-center mt-3">
-                                <span class="text-xs text-slate-400" id="comment-status"></span>
+                                <span class="text-xs text-gray-500" id="comment-status"></span>
                                 <button id="post-comment-btn" class="bg-gray-900 text-white font-bold py-2 px-5 rounded-lg text-sm hover:bg-black transition-colors">Post</button>
                             </div>
                         </div>
                         <div id="comments-list" class="space-y-5">
-                            <div class="text-center py-6 text-slate-400 italic text-sm">Loading discussion...</div>
+                            <div class="text-center py-6 text-gray-500 italic text-sm">Loading discussion...</div>
                         </div>
                     </div>
 
@@ -157,25 +216,25 @@
                     <div id="content-reviews" class="detail-tab-content hidden">
                         <!-- Overall Rating -->
                         <div id="overall-rating-container" class="flex items-center space-x-4 mb-8 hidden">
-                            <div class="text-4xl font-black text-white" id="overall-rating-score">0.0</div>
+                            <div class="text-4xl font-black text-gray-900" id="overall-rating-score">0.0</div>
                             <div>
                                 <div class="text-yellow-400 text-xl tracking-widest" id="overall-rating-stars">★★★★★</div>
-                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mt-1" id="overall-rating-count">0 Reviews</p>
+                                <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mt-1" id="overall-rating-count">0 Reviews</p>
                             </div>
                         </div>
                         
                         <!-- Write Review Form (Hidden by default, shown if scanned) -->
-                        <div id="write-review-container" class="bg-slate-800 rounded-xl p-5 mb-8 border border-slate-700 hidden">
-                            <h4 class="font-bold text-white mb-2">Leave a Review</h4>
-                            <p class="text-xs text-slate-400 mb-4">You attended this event! How was your experience?</p>
+                        <div id="write-review-container" class="bg-yellow-50 rounded-xl p-5 mb-8 border border-yellow-100 hidden">
+                            <h4 class="font-bold text-gray-900 mb-2">Leave a Review</h4>
+                            <p class="text-xs text-gray-600 mb-4">You attended this event! How was your experience?</p>
                             <div class="flex space-x-2 mb-4" id="star-selector">
-                                <button class="text-3xl text-slate-400 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="1">★</button>
-                                <button class="text-3xl text-slate-400 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="2">★</button>
-                                <button class="text-3xl text-slate-400 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="3">★</button>
-                                <button class="text-3xl text-slate-400 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="4">★</button>
-                                <button class="text-3xl text-slate-400 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="5">★</button>
+                                <button class="text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="1">★</button>
+                                <button class="text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="2">★</button>
+                                <button class="text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="3">★</button>
+                                <button class="text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="4">★</button>
+                                <button class="text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="5">★</button>
                             </div>
-                            <textarea id="review-text-input" rows="2" class="w-full border border-slate-700 rounded-lg p-3 text-sm focus:ring-yellow-500 focus:border-yellow-500 bg-slate-900" placeholder="What did you like? (Optional)"></textarea>
+                            <textarea id="review-text-input" rows="2" class="w-full border border-yellow-200 rounded-lg p-3 text-sm focus:ring-yellow-500 focus:border-yellow-500 bg-white" placeholder="What did you like? (Optional)"></textarea>
                             <div class="flex justify-end mt-3">
                                 <button id="post-review-btn" class="bg-gray-900 text-white font-bold py-2 px-6 rounded-lg text-sm hover:bg-black transition-colors" disabled>Submit</button>
                             </div>
@@ -183,7 +242,7 @@
 
                         <!-- Review List -->
                         <div id="reviews-list" class="space-y-4">
-                            <div class="text-center py-6 text-slate-400 italic text-sm">Loading reviews...</div>
+                            <div class="text-center py-6 text-gray-500 italic text-sm">Loading reviews...</div>
                         </div>
                     </div>
 
@@ -191,13 +250,13 @@
             </div>
 
             <!-- Sticky Booking Bar -->
-            <div class="fixed bottom-0 left-0 w-full bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-50 p-4 transition-all">
+            <div class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-gray-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-50 p-4 transition-all">
                 <div class="max-w-4xl mx-auto flex justify-between items-center">
                     <div>
-                        <p class="font-bold text-white" id="sticky-title">Event Title</p>
-                        <p class="text-sm text-black font-bold uppercase bg-white border-2 border-black inline-block px-2 mt-1 shadow-[2px_2px_0_0_#000]">Free Entry</p>
+                        <p class="font-bold text-gray-900" id="sticky-title">Event Title</p>
+                        <p class="text-xs text-green-600 font-bold">Free Entry</p>
                     </div>
-                    <button id="book-btn" class="bg-black text-white font-black py-4 px-10 border-4 border-black shadow-[6px_6px_0_0_rgba(255,255,255,1)] hover:bg-white hover:text-black transition-all active:translate-y-[4px] active:translate-x-[4px] active:shadow-[2px_2px_0_0_#000] uppercase text-lg">
+                    <button id="book-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-10 rounded-full focus:outline-none transition-transform active:scale-95 shadow-lg">
                         Book Ticket
                     </button>
                 </div>
@@ -208,6 +267,16 @@
     <script src="app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+            const themeSelector = document.getElementById('theme-selector');
+            if (themeSelector) {
+                themeSelector.value = localStorage.getItem('app-theme') || 'light';
+                themeSelector.addEventListener('change', (e) => {
+                    const newTheme = e.target.value;
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('app-theme', newTheme);
+                });
+            }
+
             const supabase = window.app.supabase;
             const notification = document.getElementById('notification-banner');
             let userEmail = '';
@@ -293,15 +362,15 @@
 
             document.querySelectorAll('.category-chip').forEach(btn => {
                 btn.addEventListener('click', (e) => {
+                    // Update active styling
                     document.querySelectorAll('.category-chip').forEach(b => {
-                        b.classList.remove('active', 'bg-black', 'text-white');
-                        b.classList.add('bg-white', 'text-black', 'hover:bg-yellow-400', 'hover:-translate-y-[2px]', 'hover:-translate-x-[2px]', 'hover:shadow-[6px_6px_0_0_#000]');
+                        b.classList.remove('active');
+                        
                     });
-                    const clicked = e.currentTarget;
-                    clicked.classList.add('active', 'bg-black', 'text-white');
-                    clicked.classList.remove('bg-white', 'text-black', 'hover:bg-yellow-400', 'hover:-translate-y-[2px]', 'hover:-translate-x-[2px]', 'hover:shadow-[6px_6px_0_0_#000]');
                     
-                    activeCategory = clicked.getAttribute('data-cat');
+                    e.target.classList.add('active');
+                    
+                    currentCategory = e.target.getAttribute('data-cat');
                     filterGrid();
                 });
             });
@@ -316,8 +385,8 @@
                 grid.innerHTML = '';
                 for(let i=0; i<5; i++) {
                     grid.innerHTML += `
-                        <div class="rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-sm animate-pulse">
-                            <div class="aspect-[3/4] bg-slate-800 w-full"></div>
+                        <div class="theme-card rounded-2xl overflow-hidden theme-bg-surface border theme-border shadow-sm animate-pulse">
+                            <div class="aspect-[3/4] bg-gray-200/50 w-full"></div>
                         </div>
                     `;
                 }
@@ -350,13 +419,13 @@
                             const dateObj = new Date(event.event_date);
                             
                             const slide = document.createElement('div');
-                            slide.className = 'snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] h-64 md:h-80 border-4 border-black shadow-[8px_8px_0_0_#000] bg-white relative cursor-pointer group transition-all hover:translate-y-[4px] hover:translate-x-[4px] hover:shadow-[4px_4px_0_0_#000]';
+                            slide.className = 'snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] h-64 md:h-80 rounded-3xl overflow-hidden relative cursor-pointer shadow-lg group';
                             slide.onclick = () => openDetailView(event.id);
                             
                             slide.innerHTML = `
                                 <img src="${imgUrl}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-                                <div class="absolute top-4 left-4 bg-yellow-400 text-black border-4 border-black text-xs font-black uppercase tracking-widest px-3 py-1 shadow-[4px_4px_0_0_#000] flex items-center gap-1 animate-bounce">🔥 Trending</div>
+                                <div class="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md flex items-center gap-1 animate-pulse">🔥 Trending</div>
                                 <div class="absolute bottom-0 left-0 p-5 md:p-6 w-full">
                                     <h3 class="text-white font-black text-2xl md:text-3xl leading-tight mb-2 drop-shadow-md line-clamp-2">${event.title}</h3>
                                     <p class="text-gray-200 text-xs md:text-sm font-medium">📅 ${dateObj.toLocaleDateString(undefined, {month:'short', day:'numeric'})} • 📍 ${event.venue}</p>
@@ -375,21 +444,23 @@
                         const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop';
                         
                         const card = document.createElement('div');
-                        card.className = 'poster-card relative border-4 border-black bg-white cursor-pointer shadow-[6px_6px_0_0_#000] hover:shadow-[2px_2px_0_0_#000] transition-all duration-200 transform hover:translate-y-[4px] hover:translate-x-[4px] overflow-hidden flex flex-col';
+                        card.className = 'theme-card poster-card relative rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 theme-bg-surface border theme-border';
                         card.setAttribute('data-id', event.id);
                         card.onclick = () => openDetailView(event.id);
                         
-                        const catPill = event.category && event.category !== 'General' ? `<div class="absolute top-2 left-2 bg-pink-400 border-2 border-black text-black text-[10px] font-black px-2 py-1 shadow-[2px_2px_0_0_#000] uppercase">${event.category}</div>` : '';
+                        const catPill = event.category && event.category !== 'General' 
+                            ? `<div class="absolute top-2 left-2 bg-theme-accent/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">${event.category}</div>` 
+                            : '';
 
                         card.innerHTML = `
-                            <div class="aspect-[3/4] relative w-full overflow-hidden bg-slate-800">
+                            <div class="aspect-[3/4] relative w-full overflow-hidden bg-gray-200">
                                 <img src="${imgUrl}" alt="${event.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                                ${isSoldOut ? '<div class="absolute top-2 right-2 bg-red-500 border-2 border-black text-white text-[10px] font-black px-2 py-1 shadow-[2px_2px_0_0_#000] uppercase">SOLD OUT</div>' : ''}
+                                ${isSoldOut ? '<div class="absolute top-2 right-2 bg-black/90 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded shadow-sm">SOLD OUT</div>' : ''}
                                 ${catPill}
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                                 <div class="absolute bottom-0 left-0 p-4 w-full">
                                     <h3 class="text-white font-black text-lg leading-tight line-clamp-2">${event.title}</h3>
-                                    <p class="text-slate-400 text-xs font-medium mt-1">${dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • ${event.venue}</p>
+                                    <p class="text-gray-300 text-xs font-medium mt-1">${dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • ${event.venue}</p>
                                 </div>
                             </div>
                         `;
@@ -480,8 +551,8 @@
 
             function switchDetailTab(tabName) {
                 document.querySelectorAll('.detail-tab-btn').forEach(btn => {
-                    btn.classList.remove('bg-lime-400');
-                    btn.classList.add('bg-white');
+                    btn.classList.remove('border-blue-600', 'text-blue-600');
+                    btn.classList.add('border-transparent', 'text-gray-500');
                 });
                 document.querySelectorAll('.detail-tab-content').forEach(content => {
                     content.classList.add('hidden');
@@ -489,23 +560,23 @@
                 });
                 
                 if (tabName === 'overview') {
-                    document.getElementById('tab-overview').classList.add('bg-lime-400');
-                    document.getElementById('tab-overview').classList.remove('bg-white');
+                    document.getElementById('tab-overview').classList.add('border-blue-600', 'text-blue-600');
+                    document.getElementById('tab-overview').classList.remove('border-transparent', 'text-gray-500');
                     document.getElementById('content-overview').classList.remove('hidden');
                     document.getElementById('content-overview').classList.add('block');
                 } else if (tabName === 'notices') {
-                    document.getElementById('tab-notices').classList.add('bg-lime-400');
-                    document.getElementById('tab-notices').classList.remove('bg-white');
+                    document.getElementById('tab-notices').classList.add('border-blue-600', 'text-blue-600');
+                    document.getElementById('tab-notices').classList.remove('border-transparent', 'text-gray-500');
                     document.getElementById('content-notices').classList.remove('hidden');
                     document.getElementById('content-notices').classList.add('block');
                 } else if (tabName === 'discussion') {
-                    document.getElementById('tab-discussion').classList.add('bg-lime-400');
-                    document.getElementById('tab-discussion').classList.remove('bg-white');
+                    document.getElementById('tab-discussion').classList.add('border-blue-600', 'text-blue-600');
+                    document.getElementById('tab-discussion').classList.remove('border-transparent', 'text-gray-500');
                     document.getElementById('content-discussion').classList.remove('hidden');
                     document.getElementById('content-discussion').classList.add('block');
                 } else if (tabName === 'reviews') {
-                    document.getElementById('tab-reviews').classList.add('bg-lime-400');
-                    document.getElementById('tab-reviews').classList.remove('bg-white');
+                    document.getElementById('tab-reviews').classList.add('border-blue-600', 'text-blue-600');
+                    document.getElementById('tab-reviews').classList.remove('border-transparent', 'text-gray-500');
                     document.getElementById('content-reviews').classList.remove('hidden');
                     document.getElementById('content-reviews').classList.add('block');
                 }
@@ -521,7 +592,7 @@
 
             async function loadDiscussion(eventId) {
                 const list = document.getElementById('comments-list');
-                list.innerHTML = '<div class="text-center py-6 text-slate-400 italic text-sm">Loading discussion...</div>';
+                list.innerHTML = '<div class="text-center py-6 text-gray-500 italic text-sm">Loading discussion...</div>';
                 
                 const event = eventsData.find(e => e.id === eventId);
                 
@@ -547,9 +618,9 @@
                 
                 if (comments.length === 0) {
                     list.innerHTML = `
-                        <div class="text-center py-10 bg-slate-900 rounded-xl border border-slate-800">
+                        <div class="text-center py-10 bg-gray-50 rounded-xl border border-gray-100">
                             <span class="text-4xl mb-3 block">💬</span>
-                            <p class="text-slate-400 font-medium text-sm">Be the first to start the discussion!</p>
+                            <p class="theme-text-muted font-medium text-sm">Be the first to start the discussion!</p>
                         </div>
                     `;
                     return;
@@ -567,7 +638,7 @@
                     const threadReplies = replies.filter(r => r.parent_id === thread.id);
                     if (threadReplies.length > 0) {
                         const repliesContainer = document.createElement('div');
-                        repliesContainer.className = 'ml-4 md:ml-12 mt-4 space-y-4 border-l-2 border-slate-800 pl-4';
+                        repliesContainer.className = 'ml-4 md:ml-12 mt-4 space-y-4 border-l-2 border-gray-100 pl-4';
                         threadReplies.forEach(reply => {
                             repliesContainer.appendChild(buildCommentUI(reply, event, bookedEmails));
                         });
@@ -580,7 +651,7 @@
             
             function buildCommentUI(comment, event, bookedEmails) {
                 const el = document.createElement('div');
-                el.className = 'bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-sm';
+                el.className = 'bg-white p-4 rounded-xl border border-gray-100 shadow-sm';
                 
                 const isOrganizer = comment.user_email === event.organizer_email;
                 const isBooked = bookedEmails.has(comment.user_email);
@@ -596,15 +667,15 @@
                 el.innerHTML = `
                     <div class="flex justify-between items-start mb-1">
                         <div class="flex items-center">
-                            <span class="font-bold text-white text-sm">${name}</span>
+                            <span class="font-bold text-gray-900 text-sm">${name}</span>
                             ${badges}
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-xs text-slate-500 font-medium">${d}</span>
-                            ${canDelete ? `<button class="text-slate-400 hover:text-red-500 transition-colors delete-btn" data-id="${comment.id}" title="Delete comment">🗑️</button>` : ''}
+                            <span class="text-xs text-gray-400 font-medium">${d}</span>
+                            ${canDelete ? `<button class="text-gray-300 hover:text-red-500 transition-colors delete-btn" data-id="${comment.id}" title="Delete comment">🗑️</button>` : ''}
                         </div>
                     </div>
-                    <p class="text-slate-300 text-sm leading-relaxed mb-2">${comment.content}</p>
+                    <p class="text-gray-700 text-sm leading-relaxed mb-2">${comment.content}</p>
                     ${!comment.parent_id ? `<button class="text-xs text-blue-600 font-bold hover:underline reply-btn" data-id="${comment.id}">Reply</button>` : ''}
                 `;
                 
@@ -673,7 +744,7 @@
 
             async function loadPublicNotices(eventId) {
                 const list = document.getElementById('public-notices-list');
-                list.innerHTML = '<li class="text-slate-400 italic text-sm text-center py-6">Loading notices...</li>';
+                list.innerHTML = '<li class="text-gray-500 italic text-sm text-center py-6">Loading notices...</li>';
                 
                 const { data: notices, error } = await supabase.from('event_notices').select('*').eq('event_id', eventId).order('created_at', { ascending: false });
                 
@@ -683,9 +754,9 @@
                 }
                 if (notices.length === 0) {
                     list.innerHTML = `
-                        <div class="text-center py-10 bg-slate-900 rounded-xl border border-slate-800">
+                        <div class="text-center py-10 bg-gray-50 rounded-xl border border-gray-100">
                             <span class="text-4xl mb-3 block">📭</span>
-                            <p class="text-slate-400 font-medium text-sm">No announcements yet.</p>
+                            <p class="theme-text-muted font-medium text-sm">No announcements yet.</p>
                         </div>
                     `;
                     return;
@@ -699,9 +770,9 @@
                     li.innerHTML = `
                         <div class="flex items-center space-x-2 mb-2">
                             <span class="bg-blue-600 text-white text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded">Update</span>
-                            <span class="text-slate-400 text-xs font-bold">${d}</span>
+                            <span class="text-gray-500 text-xs font-bold">${d}</span>
                         </div>
-                        <p class="text-slate-200 text-sm font-medium leading-relaxed">${n.notice_text}</p>
+                        <p class="text-gray-800 text-sm font-medium leading-relaxed">${n.notice_text}</p>
                     `;
                     list.appendChild(li);
                 });
@@ -763,10 +834,10 @@
                     currentSelectedRating = parseInt(e.target.getAttribute('data-val'));
                     document.querySelectorAll('.star-btn').forEach(b => {
                         if (parseInt(b.getAttribute('data-val')) <= currentSelectedRating) {
-                            b.classList.remove('text-slate-400');
+                            b.classList.remove('text-gray-300');
                             b.classList.add('text-yellow-400');
                         } else {
-                            b.classList.add('text-slate-400');
+                            b.classList.add('text-gray-300');
                             b.classList.remove('text-yellow-400');
                         }
                     });
@@ -806,7 +877,7 @@
                 const overviewContainer = document.getElementById('overall-rating-container');
                 const writeContainer = document.getElementById('write-review-container');
                 
-                list.innerHTML = '<div class="text-center py-6 text-slate-400 italic text-sm">Loading reviews...</div>';
+                list.innerHTML = '<div class="text-center py-6 text-gray-500 italic text-sm">Loading reviews...</div>';
                 overviewContainer.classList.add('hidden');
                 writeContainer.classList.add('hidden');
                 
@@ -842,7 +913,7 @@
                             document.getElementById('post-review-btn').disabled = true;
                             document.getElementById('post-review-btn').textContent = 'Submit';
                             document.querySelectorAll('.star-btn').forEach(b => {
-                                b.classList.add('text-slate-400');
+                                b.classList.add('text-gray-300');
                                 b.classList.remove('text-yellow-400');
                             });
                         }
@@ -851,9 +922,9 @@
                 
                 if (reviews.length === 0) {
                     list.innerHTML = `
-                        <div class="text-center py-10 bg-slate-900 rounded-xl border border-slate-800">
+                        <div class="text-center py-10 bg-gray-50 rounded-xl border border-gray-100">
                             <span class="text-4xl mb-3 block">⭐</span>
-                            <p class="text-slate-400 font-medium text-sm">No reviews yet. Be the first to attend and rate!</p>
+                            <p class="theme-text-muted font-medium text-sm">No reviews yet. Be the first to attend and rate!</p>
                         </div>
                     `;
                     return;
@@ -883,19 +954,19 @@
                     for (let i=1; i<=5; i++) { rStars += i <= r.rating ? '★' : '☆'; }
                     
                     const li = document.createElement('div');
-                    li.className = 'bg-slate-900 p-5 rounded-xl border border-slate-800 shadow-sm';
+                    li.className = 'bg-white p-5 rounded-xl border border-gray-100 shadow-sm';
                     li.innerHTML = `
                         <div class="flex justify-between items-start mb-2">
                             <div>
-                                <span class="font-bold text-white text-sm block">${name} <span class="text-green-600 ml-1 text-xs font-black bg-green-100 px-1.5 py-0.5 rounded">Verified Attendee</span></span>
+                                <span class="font-bold text-gray-900 text-sm block">${name} <span class="text-green-600 ml-1 text-xs font-black bg-green-100 px-1.5 py-0.5 rounded">Verified Attendee</span></span>
                                 <div class="text-yellow-400 text-sm mt-0.5">${rStars}</div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-xs text-slate-500 font-medium">${d}</span>
-                                ${canDelete ? `<button class="text-slate-400 hover:text-red-500 transition-colors delete-rev-btn" data-id="${r.id}" title="Delete review">🗑️</button>` : ''}
+                                <span class="text-xs text-gray-400 font-medium">${d}</span>
+                                ${canDelete ? `<button class="text-gray-300 hover:text-red-500 transition-colors delete-rev-btn" data-id="${r.id}" title="Delete review">🗑️</button>` : ''}
                             </div>
                         </div>
-                        ${r.review_text ? `<p class="text-slate-300 text-sm leading-relaxed mt-2">${r.review_text}</p>` : ''}
+                        ${r.review_text ? `<p class="text-gray-700 text-sm leading-relaxed mt-2">${r.review_text}</p>` : ''}
                     `;
                     list.appendChild(li);
                 });
