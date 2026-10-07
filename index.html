@@ -102,6 +102,7 @@
                     <div class="flex border-b border-gray-200 mb-6 overflow-x-auto" style="scrollbar-width: none; -ms-overflow-style: none;">
                         <button id="tab-overview" class="detail-tab-btn border-b-2 border-blue-600 text-blue-600 font-bold px-4 py-2 whitespace-nowrap">Overview</button>
                         <button id="tab-notices" class="detail-tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium px-4 py-2 whitespace-nowrap">Notice Board 📢</button>
+                        <button id="tab-discussion" class="detail-tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium px-4 py-2 whitespace-nowrap">Discussion 💬</button>
                     </div>
 
                     <!-- Tab: Overview -->
@@ -127,6 +128,20 @@
                         <ul id="public-notices-list" class="space-y-4">
                             <li class="text-gray-500 italic text-sm text-center py-6">Loading notices...</li>
                         </ul>
+                    </div>
+
+                    <!-- Tab: Discussion -->
+                    <div id="content-discussion" class="detail-tab-content hidden">
+                        <div class="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
+                            <textarea id="new-comment-input" rows="2" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ask a question or share your thoughts..."></textarea>
+                            <div class="flex justify-between items-center mt-3">
+                                <span class="text-xs text-gray-500" id="comment-status"></span>
+                                <button id="post-comment-btn" class="bg-gray-900 text-white font-bold py-2 px-5 rounded-lg text-sm hover:bg-black transition-colors">Post</button>
+                            </div>
+                        </div>
+                        <div id="comments-list" class="space-y-5">
+                            <div class="text-center py-6 text-gray-500 italic text-sm">Loading discussion...</div>
+                        </div>
                     </div>
 
                 </div>
@@ -368,6 +383,7 @@
                 // Reset Tabs to Overview
                 switchDetailTab('overview');
                 loadPublicNotices(event.id);
+                loadDiscussion(event.id);
             }
 
             function switchDetailTab(tabName) {
@@ -390,11 +406,158 @@
                     document.getElementById('tab-notices').classList.remove('border-transparent', 'text-gray-500');
                     document.getElementById('content-notices').classList.remove('hidden');
                     document.getElementById('content-notices').classList.add('block');
+                } else if (tabName === 'discussion') {
+                    document.getElementById('tab-discussion').classList.add('border-blue-600', 'text-blue-600');
+                    document.getElementById('tab-discussion').classList.remove('border-transparent', 'text-gray-500');
+                    document.getElementById('content-discussion').classList.remove('hidden');
+                    document.getElementById('content-discussion').classList.add('block');
                 }
             }
 
             document.getElementById('tab-overview').addEventListener('click', () => switchDetailTab('overview'));
             document.getElementById('tab-notices').addEventListener('click', () => switchDetailTab('notices'));
+            document.getElementById('tab-discussion').addEventListener('click', () => switchDetailTab('discussion'));
+
+            // Discussion Logic
+            let replyingToId = null;
+
+            async function loadDiscussion(eventId) {
+                const list = document.getElementById('comments-list');
+                list.innerHTML = '<div class="text-center py-6 text-gray-500 italic text-sm">Loading discussion...</div>';
+                
+                const event = eventsData.find(e => e.id === eventId);
+                
+                // Fetch comments, joining profiles for the full name
+                const { data: comments, error } = await supabase
+                    .from('event_comments')
+                    .select('*, profiles(full_name)')
+                    .eq('event_id', eventId)
+                    .order('created_at', { ascending: true });
+
+                // Fetch ticket holders to determine "Booked" status
+                const { data: tickets } = await supabase
+                    .from('tickets')
+                    .select('student_email')
+                    .eq('event_id', eventId);
+                    
+                const bookedEmails = new Set((tickets || []).map(t => t.student_email));
+
+                if (error) {
+                    list.innerHTML = '<div class="text-red-500 text-sm text-center py-6">Error loading discussion.</div>';
+                    return;
+                }
+                
+                if (comments.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center py-10 bg-gray-50 rounded-xl border border-gray-100">
+                            <span class="text-4xl mb-3 block">💬</span>
+                            <p class="text-gray-500 font-medium text-sm">Be the first to start the discussion!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                list.innerHTML = '';
+                
+                // Organize into threads (parents and children)
+                const threads = comments.filter(c => !c.parent_id);
+                const replies = comments.filter(c => c.parent_id);
+
+                threads.forEach(thread => {
+                    const threadEl = buildCommentUI(thread, event, bookedEmails);
+                    
+                    const threadReplies = replies.filter(r => r.parent_id === thread.id);
+                    if (threadReplies.length > 0) {
+                        const repliesContainer = document.createElement('div');
+                        repliesContainer.className = 'ml-4 md:ml-12 mt-4 space-y-4 border-l-2 border-gray-100 pl-4';
+                        threadReplies.forEach(reply => {
+                            repliesContainer.appendChild(buildCommentUI(reply, event, bookedEmails));
+                        });
+                        threadEl.appendChild(repliesContainer);
+                    }
+                    
+                    list.appendChild(threadEl);
+                });
+            }
+            
+            function buildCommentUI(comment, event, bookedEmails) {
+                const el = document.createElement('div');
+                el.className = 'bg-white p-4 rounded-xl border border-gray-100 shadow-sm';
+                
+                const isOrganizer = comment.user_email === event.organizer_email;
+                const isBooked = bookedEmails.has(comment.user_email);
+                
+                let badges = '';
+                if (isOrganizer) badges += `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">Organizer</span>`;
+                else if (isBooked) badges += `<span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">Booked</span>`;
+                
+                const name = comment.profiles?.full_name || comment.user_email.split('@')[0];
+                const d = new Date(comment.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+                
+                el.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <div class="flex items-center">
+                            <span class="font-bold text-gray-900 text-sm">${name}</span>
+                            ${badges}
+                        </div>
+                        <span class="text-xs text-gray-400 font-medium">${d}</span>
+                    </div>
+                    <p class="text-gray-700 text-sm leading-relaxed mb-2">${comment.content}</p>
+                    ${!comment.parent_id ? `<button class="text-xs text-blue-600 font-bold hover:underline reply-btn" data-id="${comment.id}">Reply</button>` : ''}
+                `;
+                
+                if (!comment.parent_id) {
+                    el.querySelector('.reply-btn').addEventListener('click', (e) => {
+                        replyingToId = e.target.getAttribute('data-id');
+                        const input = document.getElementById('new-comment-input');
+                        input.placeholder = `Replying to ${name}...`;
+                        input.focus();
+                        
+                        document.getElementById('comment-status').innerHTML = `Replying to <b>${name}</b> <button class="text-red-500 hover:underline ml-1" onclick="cancelReply()">Cancel</button>`;
+                    });
+                }
+                
+                return el;
+            }
+            
+            window.cancelReply = () => {
+                replyingToId = null;
+                document.getElementById('new-comment-input').placeholder = 'Ask a question or share your thoughts...';
+                document.getElementById('comment-status').innerHTML = '';
+            };
+
+            document.getElementById('post-comment-btn').addEventListener('click', async () => {
+                if (!userEmail) {
+                    alert('You must be logged in to post a comment.');
+                    return;
+                }
+                
+                const input = document.getElementById('new-comment-input');
+                const content = input.value.trim();
+                if (!content) return;
+                
+                const btn = document.getElementById('post-comment-btn');
+                btn.disabled = true;
+                btn.textContent = 'Posting...';
+                
+                const { error } = await supabase.from('event_comments').insert([{
+                    event_id: currentEventId,
+                    user_email: userEmail,
+                    content: content,
+                    parent_id: replyingToId
+                }]);
+                
+                btn.disabled = false;
+                btn.textContent = 'Post';
+                
+                if (error) {
+                    alert('Error posting comment: ' + error.message);
+                } else {
+                    input.value = '';
+                    cancelReply();
+                    loadDiscussion(currentEventId);
+                }
+            });
 
             async function loadPublicNotices(eventId) {
                 const list = document.getElementById('public-notices-list');
