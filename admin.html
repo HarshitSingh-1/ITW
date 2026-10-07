@@ -5,29 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - IIITNR Events</title>
     <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        theme: {
+                            base: 'var(--bg-base)',
+                            surface: 'var(--bg-surface)',
+                            text: 'var(--text-main)',
+                            muted: 'var(--text-muted)',
+                            border: 'var(--border-color)',
+                            accent: 'var(--accent-main)',
+                            hover: 'var(--accent-hover)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        const savedTheme = localStorage.getItem('app-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
     <style> body { visibility: hidden; } </style>
 </head>
-<body class="premium-bg">
+<body class="theme-bg-base min-h-screen theme-text-main transition-colors duration-300">
     <!-- Navbar -->
-    <nav class="glass-nav sticky top-0 z-50 transition-all">
+    <nav class="theme-nav-glass backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.02)] border-b theme-border sticky top-0 z-50 transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
-                    <h1 class="text-xl font-bold text-white">Admin Portal</h1>
+                    <h1 class="text-2xl font-black text-theme-accent tracking-tighter cursor-pointer hover:scale-105 transition-transform" onclick="window.location.href='index.html'">EVENTS</h1>
                     <div class="hidden md:flex space-x-4">
-                        <a href="index.html" class="text-gray-400 hover:text-white font-medium px-3 py-2 rounded-md text-sm">Back to Feed</a>
-                        <a href="admin.html" class="text-blue-400 font-medium px-3 py-2 rounded-md text-sm">Dashboard</a>
-                        <!-- Scanner hidden by default, shown via JS if role permits -->
-                        <a href="scanner.html" id="nav-scanner" class="text-gray-400 hover:text-white font-medium px-3 py-2 rounded-md text-sm hidden">Gate Scanner</a>
+                        <a href="index.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">Home</a>
+                        <a href="wallet.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">My Wallet</a>
+                        <a href="history.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">History</a>
+                        <a href="admin.html" class="admin-link text-red-600 hover:text-red-800 font-bold px-3 py-2 hidden transition-colors">Admin Portal</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span id="user-email-display" class="text-sm text-gray-300 hidden md:block"></span>
-                    <button id="logout-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-200 px-4 py-2 rounded-md text-sm font-medium transition-colors border border-gray-700">Log Out</button>
+                    <!-- Theme Switcher -->
+                    <select id="theme-selector" class="theme-bg-surface theme-text-main theme-border border rounded-lg text-sm px-2 py-1 font-medium focus:outline-none focus:ring-2 focus:ring-theme-accent cursor-pointer">
+                        <option value="light">?? Light</option>
+                        <option value="dark">?? Dark</option>
+                    </select>
+
+                    <span id="user-email-display" class="text-sm theme-text-muted hidden md:block font-medium"></span>
+                    <button id="logout-btn" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm font-bold transition-colors">Log Out</button>
                 </div>
             </div>
         </div>
@@ -41,8 +70,8 @@
             <svg class="mx-auto h-16 w-16 text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <h2 class="text-2xl font-bold text-gray-900">Access Denied</h2>
-            <p class="text-gray-500 mt-2">You do not have Organizer or Admin privileges.</p>
+            <h2 class="text-2xl font-bold theme-text-main">Access Denied</h2>
+            <p class="theme-text-muted mt-2">You do not have Organizer or Admin privileges.</p>
         </div>
 
         <!-- Dashboard Content -->
@@ -51,17 +80,17 @@
             <div id="notification-banner" class="hidden mb-6 p-4 rounded-lg text-sm font-medium"></div>
 
             <!-- Tabs -->
-            <div class="flex space-x-6 border-b border-gray-200 mb-8 overflow-x-auto">
+            <div class="flex space-x-6 border-b theme-border mb-8 overflow-x-auto">
                 <button id="tab-events" class="border-b-2 border-blue-600 text-blue-600 font-semibold pb-3 px-1 whitespace-nowrap">My Events</button>
-                <button id="tab-create" class="border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium pb-3 px-1 whitespace-nowrap">Create Event</button>
-                <button id="tab-roles" class="border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium pb-3 px-1 whitespace-nowrap hidden">Role Management</button>
+                <button id="tab-create" class="border-b-2 border-transparent theme-text-muted hover:theme-text-main font-medium pb-3 px-1 whitespace-nowrap">Create Event</button>
+                <button id="tab-roles" class="border-b-2 border-transparent theme-text-muted hover:theme-text-main font-medium pb-3 px-1 whitespace-nowrap hidden">Role Management</button>
             </div>
 
             <!-- View: Events List -->
             <div id="view-events">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold text-gray-900">Manage Events</h2>
-                    <p class="text-sm text-gray-500" id="events-count">Loading...</p>
+                    <h2 class="text-xl font-bold theme-text-main">Manage Events</h2>
+                    <p class="text-sm theme-text-muted" id="events-count">Loading...</p>
                 </div>
                 <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
@@ -75,8 +104,8 @@
                 
                 <div class="flex justify-between items-end mb-6">
                     <div>
-                        <h2 class="text-2xl font-extrabold text-gray-900" id="manage-title">Event Title</h2>
-                        <p class="text-gray-500 text-sm mt-1" id="manage-stats">0 Booked / 0 Capacity</p>
+                        <h2 class="text-2xl font-extrabold theme-text-main" id="manage-title">Event Title</h2>
+                        <p class="theme-text-muted text-sm mt-1" id="manage-stats">0 Booked / 0 Capacity</p>
                     </div>
                     <button id="btn-export-csv" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow-sm text-sm flex items-center transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -87,17 +116,17 @@
                 <!-- Notice Board Management -->
                 <div class="bg-blue-50 p-4 rounded-lg shadow-sm border border-blue-100 mb-8 flex flex-col md:flex-row gap-6">
                     <div class="flex-grow">
-                        <h4 class="text-sm font-bold text-gray-900 mb-2">Post Event Notice 📢</h4>
-                        <p class="text-xs text-gray-600 mb-3">Broadcast urgent updates (venue change, delays, etc.) to all attendees.</p>
+                        <h4 class="text-sm font-bold theme-text-main mb-2">Post Event Notice 📢</h4>
+                        <p class="text-xs theme-text-muted mb-3">Broadcast urgent updates (venue change, delays, etc.) to all attendees.</p>
                         <form id="post-notice-form" class="flex gap-2">
-                            <input type="text" id="notice-text" required placeholder="e.g. Venue shifted to Auditorium 2" class="text-sm border border-gray-300 rounded px-3 py-2 flex-grow focus:ring-blue-500">
+                            <input type="text" id="notice-text" required placeholder="e.g. Venue shifted to Auditorium 2" class="text-sm border theme-border rounded px-3 py-2 flex-grow focus:ring-blue-500">
                             <button type="submit" class="bg-blue-600 text-white text-sm font-bold py-2 px-4 rounded hover:bg-blue-700 whitespace-nowrap">Post Notice</button>
                         </form>
                     </div>
                     <div class="flex-grow md:max-w-md">
-                        <h4 class="text-sm font-bold text-gray-900 mb-2">Active Notices</h4>
+                        <h4 class="text-sm font-bold theme-text-main mb-2">Active Notices</h4>
                         <ul id="active-notices-list" class="space-y-2 max-h-32 overflow-y-auto text-sm">
-                            <li class="text-gray-500 text-xs italic">Loading...</li>
+                            <li class="theme-text-muted text-xs italic">Loading...</li>
                         </ul>
                     </div>
                 </div>
@@ -105,62 +134,62 @@
                 <!-- Graphical Analytics & Gatekeeper Management -->
                 <div id="analytics-panel" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 hidden">
                     <!-- Gatekeeper Assignment -->
-                    <div class="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col md:col-span-1">
-                        <h4 class="text-sm font-bold text-gray-900 mb-2">Assign Gatekeeper</h4>
-                        <p class="text-xs text-gray-500 mb-3">Restrict who can scan tickets for this event.</p>
+                    <div class="theme-bg-base p-4 rounded-lg shadow-sm border theme-border flex flex-col md:col-span-1">
+                        <h4 class="text-sm font-bold theme-text-main mb-2">Assign Gatekeeper</h4>
+                        <p class="text-xs theme-text-muted mb-3">Restrict who can scan tickets for this event.</p>
                         <form id="assign-gk-form" class="flex flex-col gap-2 mt-auto">
-                            <input type="email" id="gk-email" required placeholder="Gatekeeper Email" class="text-sm border border-gray-300 rounded px-2 py-1.5 w-full">
-                            <button type="submit" class="bg-gray-800 text-white text-sm font-bold py-1.5 rounded hover:bg-gray-900 w-full">Add Access</button>
+                            <input type="email" id="gk-email" required placeholder="Gatekeeper Email" class="text-sm border theme-border rounded px-2 py-1.5 w-full">
+                            <button type="submit" class="theme-bg-surface text-white text-sm font-bold py-1.5 rounded hover:bg-gray-900 w-full">Add Access</button>
                         </form>
-                        <ul id="assigned-gk-list" class="mt-4 space-y-1 text-xs text-gray-700"></ul>
+                        <ul id="assigned-gk-list" class="mt-4 space-y-1 text-xs theme-text-main"></ul>
                     </div>
 
-                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col items-center">
-                        <h4 class="text-sm font-bold text-gray-500 mb-2">Gender</h4>
+                    <div class="theme-bg-surface p-4 rounded-lg shadow-sm border theme-border flex flex-col items-center">
+                        <h4 class="text-sm font-bold theme-text-muted mb-2">Gender</h4>
                         <div class="w-full h-40 relative"><canvas id="chart-gender"></canvas></div>
                     </div>
-                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col items-center">
-                        <h4 class="text-sm font-bold text-gray-500 mb-2">Branch</h4>
+                    <div class="theme-bg-surface p-4 rounded-lg shadow-sm border theme-border flex flex-col items-center">
+                        <h4 class="text-sm font-bold theme-text-muted mb-2">Branch</h4>
                         <div class="w-full h-40 relative"><canvas id="chart-branch"></canvas></div>
                     </div>
-                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col items-center">
-                        <h4 class="text-sm font-bold text-gray-500 mb-2">Batch</h4>
+                    <div class="theme-bg-surface p-4 rounded-lg shadow-sm border theme-border flex flex-col items-center">
+                        <h4 class="text-sm font-bold theme-text-muted mb-2">Batch</h4>
                         <div class="w-full h-40 relative"><canvas id="chart-batch"></canvas></div>
                     </div>
                 </div>
 
-                <div class="bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden">
+                <div class="theme-bg-surface shadow-sm border theme-border rounded-lg overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                            <thead class="theme-bg-base">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch & Branch</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium theme-text-muted uppercase tracking-wider">Student Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium theme-text-muted uppercase tracking-wider">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium theme-text-muted uppercase tracking-wider">Batch & Branch</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium theme-text-muted uppercase tracking-wider">Status</th>
                                 </tr>
                             </thead>
-                            <tbody id="attendees-table" class="bg-white divide-y divide-gray-200">
+                            <tbody id="attendees-table" class="theme-bg-surface divide-y divide-gray-200">
                                 <!-- JS Injection -->
                             </tbody>
                         </table>
                     </div>
-                    <div id="attendees-loading" class="text-center py-8 text-gray-500">Loading attendees...</div>
+                    <div id="attendees-loading" class="text-center py-8 theme-text-muted">Loading attendees...</div>
                 </div>
             </div>
 
             <!-- View: Create Event -->
             <div id="view-create" class="hidden">
-                <form id="create-event-form" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 max-w-2xl mx-auto">
+                <form id="create-event-form" class="theme-bg-surface p-6 rounded-xl shadow-sm border theme-border max-w-2xl mx-auto">
                     <h3 class="text-lg font-bold mb-4 border-b pb-2">Create New Event</h3>
                     <div class="space-y-5">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Event Title *</label>
+                                <label class="block text-sm font-medium theme-text-main">Event Title *</label>
                                 <input type="text" id="title" required class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Category *</label>
+                                <label class="block text-sm font-medium theme-text-main">Category *</label>
                                 <select id="category" required class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                                     <option value="General">General & Social</option>
                                     <option value="Technical">Technical & Coding</option>
@@ -172,39 +201,39 @@
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Start Date & Time *</label>
+                                <label class="block text-sm font-medium theme-text-main">Start Date & Time *</label>
                                 <input type="datetime-local" id="event_date" required class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">End Date & Time</label>
+                                <label class="block text-sm font-medium theme-text-main">End Date & Time</label>
                                 <input type="datetime-local" id="event_end_date" class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                             </div>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Total Capacity *</label>
+                                <label class="block text-sm font-medium theme-text-main">Total Capacity *</label>
                                 <input type="number" id="total_capacity" min="1" required class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Venue *</label>
+                                <label class="block text-sm font-medium theme-text-main">Venue *</label>
                                 <input type="text" id="venue" required class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Poster Image (Upload)</label>
-                            <input type="file" id="poster_file" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded-md py-1 px-2">
-                            <p class="text-xs text-gray-500 mt-1">Upload a local image from your device.</p>
+                            <label class="block text-sm font-medium theme-text-main">Poster Image (Upload)</label>
+                            <input type="file" id="poster_file" accept="image/*" class="mt-1 block w-full text-sm theme-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border theme-border rounded-md py-1 px-2">
+                            <p class="text-xs theme-text-muted mt-1">Upload a local image from your device.</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Scanner Unlock Time</label>
+                            <label class="block text-sm font-medium theme-text-main">Scanner Unlock Time</label>
                             <div class="flex items-center mt-1">
-                                <input type="number" id="scan_buffer" min="0" required value="120" class="block w-24 border border-gray-300 rounded-md shadow-sm py-2 px-3 mr-2">
-                                <span class="text-sm text-gray-600">minutes before the event</span>
+                                <input type="number" id="scan_buffer" min="0" required value="120" class="block w-24 border theme-border rounded-md shadow-sm py-2 px-3 mr-2">
+                                <span class="text-sm theme-text-muted">minutes before the event</span>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">Gatekeepers can only scan tickets starting this many minutes before the event date (and until the end of the day).</p>
+                            <p class="text-xs theme-text-muted mt-1">Gatekeepers can only scan tickets starting this many minutes before the event date (and until the end of the day).</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Description</label>
+                            <label class="block text-sm font-medium theme-text-main">Description</label>
                             <textarea id="description" rows="3" class="glass-input mt-1 block w-full rounded-xl py-3 px-4"></textarea>
                         </div>
                     </div>
@@ -216,23 +245,23 @@
 
             <!-- View: Role Management (Super Admin) -->
             <div id="view-roles" class="hidden max-w-2xl mx-auto">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="theme-bg-surface p-6 rounded-xl shadow-sm border theme-border">
                     <h3 class="text-lg font-bold mb-2">Promote User Roles</h3>
-                    <p class="text-sm text-gray-500 mb-6">Assign special privileges to students. They must have logged in at least once to have a profile.</p>
+                    <p class="text-sm theme-text-muted mb-6">Assign special privileges to students. They must have logged in at least once to have a profile.</p>
                     
                     <form id="role-form" class="flex items-end space-x-4">
                         <div class="flex-grow">
-                            <label class="block text-sm font-medium text-gray-700">Student Email</label>
+                            <label class="block text-sm font-medium theme-text-main">Student Email</label>
                             <input type="email" id="role-email" required placeholder="email@iiitnr.edu.in" class="glass-input mt-1 block w-full rounded-xl py-3 px-4">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">New Role</label>
-                            <select id="role-select" required class="glass-input mt-1 block w-full rounded-xl py-3 px-4 bg-white">
+                            <label class="block text-sm font-medium theme-text-main">New Role</label>
+                            <select id="role-select" required class="glass-input mt-1 block w-full rounded-xl py-3 px-4 theme-bg-surface">
                                 <option value="organizer">Organizer</option>
                                 <option value="student">Student (Revoke)</option>
                             </select>
                         </div>
-                        <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded-md h-[42px] mb-[2px]">Update</button>
+                        <button type="submit" class="theme-bg-surface hover:bg-gray-900 text-white font-bold py-2 px-4 rounded-md h-[42px] mb-[2px]">Update</button>
                     </form>
                 </div>
             </div>
@@ -243,6 +272,15 @@
     <script src="app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+                        const themeSelector = document.getElementById('theme-selector');
+            if (themeSelector) {
+                themeSelector.value = localStorage.getItem('app-theme') || 'light';
+                themeSelector.addEventListener('change', (e) => {
+                    const newTheme = e.target.value;
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('app-theme', newTheme);
+                });
+            }
             const supabase = window.app.supabase;
             let currentUserRole = 'student';
             let currentUserEmail = '';
@@ -305,7 +343,7 @@
 
             async function loadNotices(eventId) {
                 const list = document.getElementById('active-notices-list');
-                list.innerHTML = '<li class="text-gray-500 text-xs italic">Loading notices...</li>';
+                list.innerHTML = '<li class="theme-text-muted text-xs italic">Loading notices...</li>';
                 
                 const { data: notices, error } = await supabase.from('event_notices').select('*').eq('event_id', eventId).order('created_at', { ascending: false });
                 
@@ -314,7 +352,7 @@
                     return;
                 }
                 if (notices.length === 0) {
-                    list.innerHTML = '<li class="text-gray-400 italic text-xs">No active notices.</li>';
+                    list.innerHTML = '<li class="theme-text-muted italic text-xs">No active notices.</li>';
                     return;
                 }
                 
@@ -324,7 +362,7 @@
                     li.className = "flex justify-between items-start border-b pb-2 break-words text-xs";
                     const d = new Date(n.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
                     li.innerHTML = `
-                        <div class="pr-2"><span class="font-bold text-gray-700 block">${d}</span><span class="text-gray-800">${n.notice_text}</span></div>
+                        <div class="pr-2"><span class="font-bold theme-text-main block">${d}</span><span class="theme-text-main">${n.notice_text}</span></div>
                         <button title="Delete Notice" class="text-red-500 hover:text-red-700 font-bold ml-2 delete-notice-btn flex-shrink-0" data-id="${n.id}">🗑️</button>
                     `;
                     list.appendChild(li);
@@ -354,7 +392,7 @@
                 Object.keys(tabs).forEach(key => {
                     if(tabs[key].view) tabs[key].view.classList.add('hidden');
                     if(tabs[key].btn) {
-                        tabs[key].btn.className = 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium pb-3 px-1 whitespace-nowrap';
+                        tabs[key].btn.className = 'border-b-2 border-transparent theme-text-muted hover:theme-text-main font-medium pb-3 px-1 whitespace-nowrap';
                     }
                 });
                 // Activate target
@@ -405,7 +443,7 @@
                     const dateObj = new Date(event.event_date);
                     
                     const card = document.createElement('div');
-                    card.className = 'bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md cursor-pointer transition-shadow flex flex-col h-full';
+                    card.className = 'theme-bg-surface rounded-xl shadow-sm border theme-border p-5 hover:shadow-md cursor-pointer transition-shadow flex flex-col h-full';
                     card.onclick = () => openManageEvent(event);
                     card.innerHTML = `
                         <div class="h-32 -mx-5 -mt-5 mb-4 relative overflow-hidden rounded-t-xl">
@@ -413,16 +451,16 @@
                             <div class="absolute inset-0 bg-black/20"></div>
                             ${event.category && event.category !== 'General' ? `<span class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">${event.category}</span>` : ''}
                         </div>
-                        <h3 class="font-bold text-lg text-gray-900 leading-tight mb-1 line-clamp-1">${event.title}</h3>
+                        <h3 class="font-bold text-lg theme-text-main leading-tight mb-1 line-clamp-1">${event.title}</h3>
                         ${orgName ? `<p class="text-xs text-blue-600 font-semibold mb-2 line-clamp-1">By: ${orgName}</p>` : ''}
-                        <p class="text-sm text-gray-500 mb-2">📅 ${dateObj.toLocaleDateString(undefined, {month:'short', day:'numeric'})} • 📍 ${event.venue || 'TBA'}</p>
+                        <p class="text-sm theme-text-muted mb-2">📅 ${dateObj.toLocaleDateString(undefined, {month:'short', day:'numeric'})} • 📍 ${event.venue || 'TBA'}</p>
                         <div class="mt-auto">
-                            <div class="flex justify-between text-xs font-medium text-gray-600 mb-1">
+                            <div class="flex justify-between text-xs font-medium theme-text-muted mb-1">
                                 <span>${event.tickets_sold} Booked</span>
                                 <span>${fill}% Full</span>
                             </div>
-                            <div class="w-full bg-gray-100 rounded-full h-1.5"><div class="bg-blue-600 h-1.5 rounded-full transition-all" style="width: ${fill}%"></div></div>
-                            <button class="mt-4 w-full border border-gray-200 rounded-md py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 bg-white">Manage Event</button>
+                            <div class="w-full theme-bg-base rounded-full h-1.5"><div class="bg-blue-600 h-1.5 rounded-full transition-all" style="width: ${fill}%"></div></div>
+                            <button class="mt-4 w-full border theme-border rounded-md py-1.5 text-sm font-medium theme-text-main hover:theme-bg-base theme-bg-surface">Manage Event</button>
                         </div>
                     `;
                     grid.appendChild(card);
@@ -511,7 +549,7 @@
                             });
                         });
                     } else {
-                        gkList.innerHTML = '<li class="text-gray-400 italic text-sm">No gatekeepers assigned.</li>';
+                        gkList.innerHTML = '<li class="theme-text-muted italic text-sm">No gatekeepers assigned.</li>';
                     }
 
                     // Setup Notices
@@ -566,13 +604,13 @@
                     currentAttendeesData.forEach(row => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${row.name}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.email}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.batch} - ${row.branch}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium theme-text-main">${row.name}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm theme-text-muted">${row.email}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm theme-text-muted">${row.batch} - ${row.branch}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 ${row.scanned 
                                     ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Scanned</span>' 
-                                    : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Pending</span>'}
+                                    : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full theme-bg-base theme-text-main">Pending</span>'}
                             </td>
                         `;
                         tbody.appendChild(tr);
@@ -723,4 +761,6 @@
     </script>
 </body>
 </html>
+
+
 

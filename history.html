@@ -5,27 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>History - IIITNR Events</title>
     <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        theme: {
+                            base: 'var(--bg-base)',
+                            surface: 'var(--bg-surface)',
+                            text: 'var(--text-main)',
+                            muted: 'var(--text-muted)',
+                            border: 'var(--border-color)',
+                            accent: 'var(--accent-main)',
+                            hover: 'var(--accent-hover)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        const savedTheme = localStorage.getItem('app-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="premium-bg">
+<body class="theme-bg-base min-h-screen theme-text-main transition-colors duration-300">
     <!-- Navbar -->
-    <nav class="glass-nav sticky top-0 z-50 transition-all">
+    <nav class="theme-nav-glass backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.02)] border-b theme-border sticky top-0 z-50 transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
-                    <h1 class="text-xl font-bold text-gray-900">IIITNR Events</h1>
+                    <h1 class="text-2xl font-black text-theme-accent tracking-tighter cursor-pointer hover:scale-105 transition-transform" onclick="window.location.href='index.html'">EVENTS</h1>
                     <div class="hidden md:flex space-x-4">
-                        <a href="index.html" class="text-gray-500 hover:text-gray-900 font-medium px-3 py-2 rounded-md text-sm">Home</a>
-                        <a href="wallet.html" class="text-gray-500 hover:text-gray-900 font-medium px-3 py-2 rounded-md text-sm">My Wallet</a>
-                        <a href="history.html" class="text-blue-600 font-medium px-3 py-2 rounded-md text-sm">History</a>
+                        <a href="index.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">Home</a>
+                        <a href="wallet.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">My Wallet</a>
+                        <a href="history.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">History</a>
+                        <a href="admin.html" class="admin-link text-red-600 hover:text-red-800 font-bold px-3 py-2 hidden transition-colors">Admin Portal</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span id="user-email-display" class="text-sm text-gray-600 hidden md:block"></span>
-                    <button id="logout-btn" class="bg-red-50 hover:text-red-700 text-red-600 px-4 py-2 rounded-md text-sm font-medium transition-colors border border-red-200">
-                        Log Out
-                    </button>
+                    <!-- Theme Switcher -->
+                    <select id="theme-selector" class="theme-bg-surface theme-text-main theme-border border rounded-lg text-sm px-2 py-1 font-medium focus:outline-none focus:ring-2 focus:ring-theme-accent cursor-pointer">
+                        <option value="light">?? Light</option>
+                        <option value="dark">?? Dark</option>
+                    </select>
+
+                    <span id="user-email-display" class="text-sm theme-text-muted hidden md:block font-medium"></span>
+                    <button id="logout-btn" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm font-bold transition-colors">Log Out</button>
                 </div>
             </div>
         </div>
@@ -36,13 +64,13 @@
         
         <!-- Section: Events Attended -->
         <section>
-            <div class="mb-6 border-b border-gray-200 pb-4">
-                <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Events I Attended</h2>
-                <p class="text-gray-500 mt-1">A log of all the campus events you've participated in.</p>
+            <div class="mb-6 border-b theme-border pb-4">
+                <h2 class="text-2xl font-extrabold theme-text-main tracking-tight">Events I Attended</h2>
+                <p class="theme-text-muted mt-1">A log of all the campus events you've participated in.</p>
             </div>
 
-            <div id="attended-loading" class="text-gray-500 text-sm">Loading past tickets...</div>
-            <div id="attended-empty" class="hidden text-gray-500 text-sm italic">You haven't attended any past events.</div>
+            <div id="attended-loading" class="theme-text-muted text-sm">Loading past tickets...</div>
+            <div id="attended-empty" class="hidden theme-text-muted text-sm italic">You haven't attended any past events.</div>
             
             <div id="attended-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
                 <!-- Injected via JS -->
@@ -51,13 +79,13 @@
 
         <!-- Section: Events Organized -->
         <section>
-            <div class="mb-6 border-b border-gray-200 pb-4">
-                <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Events I Organized</h2>
-                <p class="text-gray-500 mt-1">Past events that you created and hosted.</p>
+            <div class="mb-6 border-b theme-border pb-4">
+                <h2 class="text-2xl font-extrabold theme-text-main tracking-tight">Events I Organized</h2>
+                <p class="theme-text-muted mt-1">Past events that you created and hosted.</p>
             </div>
 
-            <div id="organized-loading" class="text-gray-500 text-sm">Loading past events...</div>
-            <div id="organized-empty" class="hidden text-gray-500 text-sm italic">You haven't organized any events yet.</div>
+            <div id="organized-loading" class="theme-text-muted text-sm">Loading past events...</div>
+            <div id="organized-empty" class="hidden theme-text-muted text-sm italic">You haven't organized any events yet.</div>
             
             <div id="organized-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
                 <!-- Injected via JS -->
@@ -69,6 +97,15 @@
     <script src="app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+                        const themeSelector = document.getElementById('theme-selector');
+            if (themeSelector) {
+                themeSelector.value = localStorage.getItem('app-theme') || 'light';
+                themeSelector.addEventListener('change', (e) => {
+                    const newTheme = e.target.value;
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('app-theme', newTheme);
+                });
+            }
             const supabase = window.app.supabase;
             const emailDisplay = document.getElementById('user-email-display');
 
@@ -111,17 +148,17 @@
                     tickets.forEach(ticket => {
                         const event = ticket.events;
                         const card = document.createElement('div');
-                        card.className = 'glass-card p-5 rounded-2xl shadow-sm opacity-90 transition-transform hover:scale-[1.02]'; // Slightly faded to imply past
+                        card.className = 'theme-card theme-bg-surface p-5 rounded-2xl shadow-sm opacity-90 transition-transform hover:scale-[1.02]'; // Slightly faded to imply past
                         card.innerHTML = `
                             <div class="flex justify-between items-start mb-2">
-                                <h3 class="font-bold text-gray-900">${event.title}</h3>
+                                <h3 class="font-bold theme-text-main">${event.title}</h3>
                                 ${ticket.is_scanned 
                                     ? '<span class="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded">Attended</span>'
                                     : '<span class="text-xs font-semibold text-red-700 bg-red-100 px-2 py-1 rounded">Missed</span>'
                                 }
                             </div>
-                            <div class="text-sm text-gray-500 mb-1">${formatDateTime(event.event_date)}</div>
-                            <div class="text-sm text-gray-500">${event.venue}</div>
+                            <div class="text-sm theme-text-muted mb-1">${formatDateTime(event.event_date)}</div>
+                            <div class="text-sm theme-text-muted">${event.venue}</div>
                         `;
                         grid.appendChild(card);
                     });
@@ -159,18 +196,18 @@
                             : 0;
 
                         const card = document.createElement('div');
-                        card.className = 'glass-panel p-5 rounded-2xl text-gray-900 shadow-lg border border-white/80 transition-transform hover:-translate-y-1';
+                        card.className = 'theme-card theme-bg-surface p-5 rounded-2xl theme-text-main shadow-lg border theme-border transition-transform hover:-translate-y-1';
                         card.innerHTML = `
                             <h3 class="font-bold text-lg mb-1">${event.title}</h3>
-                            <div class="text-sm text-gray-500 font-medium mb-4">${formatDateTime(event.event_date)}</div>
+                            <div class="text-sm theme-text-muted font-medium mb-4">${formatDateTime(event.event_date)}</div>
                             
-                            <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-300/50">
+                            <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t theme-border/50">
                                 <div>
-                                    <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Tickets Sold</div>
-                                    <div class="font-semibold text-xl">${event.tickets_sold} <span class="text-sm text-gray-500">/ ${event.total_capacity}</span></div>
+                                    <div class="text-[10px] font-bold theme-text-muted uppercase tracking-widest mb-1">Tickets Sold</div>
+                                    <div class="font-semibold text-xl">${event.tickets_sold} <span class="text-sm theme-text-muted">/ ${event.total_capacity}</span></div>
                                 </div>
                                 <div>
-                                    <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Fill Rate</div>
+                                    <div class="text-[10px] font-bold theme-text-muted uppercase tracking-widest mb-1">Fill Rate</div>
                                     <div class="font-semibold text-xl text-blue-400">${attendanceRate}%</div>
                                 </div>
                             </div>
@@ -189,4 +226,6 @@
     </script>
 </body>
 </html>
+
+
 
