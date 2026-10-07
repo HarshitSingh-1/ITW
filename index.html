@@ -168,6 +168,7 @@
             const supabase = window.app.supabase;
             const notification = document.getElementById('notification-banner');
             let userEmail = '';
+            let currentUserRole = 'student';
             let currentEventId = null;
 
             // Session
@@ -175,6 +176,8 @@
             if (session) {
                 userEmail = session.user.email;
                 if(document.getElementById('user-email-display')) document.getElementById('user-email-display').textContent = userEmail;
+                const { data: profile } = await supabase.from('profiles').select('role').eq('email', userEmail).single();
+                if (profile) currentUserRole = profile.role;
             }
 
             function showNotification(msg, type = 'success') {
@@ -486,6 +489,7 @@
                 
                 const isOrganizer = comment.user_email === event.organizer_email;
                 const isBooked = bookedEmails.has(comment.user_email);
+                const canDelete = userEmail && (userEmail === comment.user_email || userEmail === event.organizer_email || currentUserRole === 'super_admin');
                 
                 let badges = '';
                 if (isOrganizer) badges += `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">Organizer</span>`;
@@ -500,11 +504,24 @@
                             <span class="font-bold text-gray-900 text-sm">${name}</span>
                             ${badges}
                         </div>
-                        <span class="text-xs text-gray-400 font-medium">${d}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-400 font-medium">${d}</span>
+                            ${canDelete ? `<button class="text-gray-300 hover:text-red-500 transition-colors delete-btn" data-id="${comment.id}" title="Delete comment">🗑️</button>` : ''}
+                        </div>
                     </div>
                     <p class="text-gray-700 text-sm leading-relaxed mb-2">${comment.content}</p>
                     ${!comment.parent_id ? `<button class="text-xs text-blue-600 font-bold hover:underline reply-btn" data-id="${comment.id}">Reply</button>` : ''}
                 `;
+                
+                if (canDelete) {
+                    el.querySelector('.delete-btn').addEventListener('click', async (e) => {
+                        if (confirm('Delete this comment?')) {
+                            const { error } = await supabase.from('event_comments').delete().eq('id', comment.id);
+                            if (error) alert('Error deleting comment: ' + error.message);
+                            else loadDiscussion(currentEventId);
+                        }
+                    });
+                }
                 
                 if (!comment.parent_id) {
                     el.querySelector('.reply-btn').addEventListener('click', (e) => {
