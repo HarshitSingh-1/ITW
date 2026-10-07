@@ -103,6 +103,7 @@
                         <button id="tab-overview" class="detail-tab-btn border-b-2 border-blue-600 text-blue-600 font-bold px-4 py-2 whitespace-nowrap">Overview</button>
                         <button id="tab-notices" class="detail-tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium px-4 py-2 whitespace-nowrap">Notice Board 📢</button>
                         <button id="tab-discussion" class="detail-tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium px-4 py-2 whitespace-nowrap">Discussion 💬</button>
+                        <button id="tab-reviews" class="detail-tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium px-4 py-2 whitespace-nowrap">Reviews ⭐</button>
                     </div>
 
                     <!-- Tab: Overview -->
@@ -141,6 +142,40 @@
                         </div>
                         <div id="comments-list" class="space-y-5">
                             <div class="text-center py-6 text-gray-500 italic text-sm">Loading discussion...</div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Reviews -->
+                    <div id="content-reviews" class="detail-tab-content hidden">
+                        <!-- Overall Rating -->
+                        <div id="overall-rating-container" class="flex items-center space-x-4 mb-8 hidden">
+                            <div class="text-4xl font-black text-gray-900" id="overall-rating-score">0.0</div>
+                            <div>
+                                <div class="text-yellow-400 text-xl tracking-widest" id="overall-rating-stars">★★★★★</div>
+                                <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mt-1" id="overall-rating-count">0 Reviews</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Write Review Form (Hidden by default, shown if scanned) -->
+                        <div id="write-review-container" class="bg-yellow-50 rounded-xl p-5 mb-8 border border-yellow-100 hidden">
+                            <h4 class="font-bold text-gray-900 mb-2">Leave a Review</h4>
+                            <p class="text-xs text-gray-600 mb-4">You attended this event! How was your experience?</p>
+                            <div class="flex space-x-2 mb-4" id="star-selector">
+                                <button class="text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="1">★</button>
+                                <button class="text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="2">★</button>
+                                <button class="text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="3">★</button>
+                                <button class="text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="4">★</button>
+                                <button class="text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="5">★</button>
+                            </div>
+                            <textarea id="review-text-input" rows="2" class="w-full border border-yellow-200 rounded-lg p-3 text-sm focus:ring-yellow-500 focus:border-yellow-500 bg-white" placeholder="What did you like? (Optional)"></textarea>
+                            <div class="flex justify-end mt-3">
+                                <button id="post-review-btn" class="bg-gray-900 text-white font-bold py-2 px-6 rounded-lg text-sm hover:bg-black transition-colors" disabled>Submit</button>
+                            </div>
+                        </div>
+
+                        <!-- Review List -->
+                        <div id="reviews-list" class="space-y-4">
+                            <div class="text-center py-6 text-gray-500 italic text-sm">Loading reviews...</div>
                         </div>
                     </div>
 
@@ -387,6 +422,7 @@
                 switchDetailTab('overview');
                 loadPublicNotices(event.id);
                 loadDiscussion(event.id);
+                loadReviews(event.id);
             }
 
             function switchDetailTab(tabName) {
@@ -414,12 +450,18 @@
                     document.getElementById('tab-discussion').classList.remove('border-transparent', 'text-gray-500');
                     document.getElementById('content-discussion').classList.remove('hidden');
                     document.getElementById('content-discussion').classList.add('block');
+                } else if (tabName === 'reviews') {
+                    document.getElementById('tab-reviews').classList.add('border-blue-600', 'text-blue-600');
+                    document.getElementById('tab-reviews').classList.remove('border-transparent', 'text-gray-500');
+                    document.getElementById('content-reviews').classList.remove('hidden');
+                    document.getElementById('content-reviews').classList.add('block');
                 }
             }
 
             document.getElementById('tab-overview').addEventListener('click', () => switchDetailTab('overview'));
             document.getElementById('tab-notices').addEventListener('click', () => switchDetailTab('notices'));
             document.getElementById('tab-discussion').addEventListener('click', () => switchDetailTab('discussion'));
+            document.getElementById('tab-reviews').addEventListener('click', () => switchDetailTab('reviews'));
 
             // Discussion Logic
             let replyingToId = null;
@@ -659,6 +701,162 @@
                     }
                 }
             });
+
+            // Reviews Logic
+            let currentSelectedRating = 0;
+
+            document.querySelectorAll('.star-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    currentSelectedRating = parseInt(e.target.getAttribute('data-val'));
+                    document.querySelectorAll('.star-btn').forEach(b => {
+                        if (parseInt(b.getAttribute('data-val')) <= currentSelectedRating) {
+                            b.classList.remove('text-gray-300');
+                            b.classList.add('text-yellow-400');
+                        } else {
+                            b.classList.add('text-gray-300');
+                            b.classList.remove('text-yellow-400');
+                        }
+                    });
+                    document.getElementById('post-review-btn').disabled = false;
+                });
+            });
+
+            document.getElementById('post-review-btn').addEventListener('click', async () => {
+                if (currentSelectedRating === 0) return;
+                
+                const btn = document.getElementById('post-review-btn');
+                const text = document.getElementById('review-text-input').value.trim();
+                
+                btn.disabled = true;
+                btn.textContent = 'Submitting...';
+                
+                const { error } = await supabase.from('event_reviews').insert([{
+                    event_id: currentEventId,
+                    user_email: userEmail,
+                    rating: currentSelectedRating,
+                    review_text: text || null
+                }]);
+                
+                if (error) {
+                    if (error.code === '23505') alert('You have already submitted a review for this event.');
+                    else alert('Error submitting review: ' + error.message);
+                    btn.disabled = false;
+                    btn.textContent = 'Submit';
+                } else {
+                    document.getElementById('write-review-container').classList.add('hidden');
+                    loadReviews(currentEventId);
+                }
+            });
+
+            async function loadReviews(eventId) {
+                const list = document.getElementById('reviews-list');
+                const overviewContainer = document.getElementById('overall-rating-container');
+                const writeContainer = document.getElementById('write-review-container');
+                
+                list.innerHTML = '<div class="text-center py-6 text-gray-500 italic text-sm">Loading reviews...</div>';
+                overviewContainer.classList.add('hidden');
+                writeContainer.classList.add('hidden');
+                
+                // 1. Fetch reviews
+                const { data: reviews, error } = await supabase
+                    .from('event_reviews')
+                    .select('*, profiles(full_name)')
+                    .eq('event_id', eventId)
+                    .order('created_at', { ascending: false });
+                    
+                if (error) {
+                    list.innerHTML = '<div class="text-red-500 text-sm text-center py-6">Error loading reviews.</div>';
+                    return;
+                }
+                
+                // 2. Check if user can review
+                if (userEmail) {
+                    const hasReviewed = reviews.some(r => r.user_email === userEmail);
+                    if (!hasReviewed) {
+                        // Check if they have a SCANNED ticket
+                        const { data: tkt } = await supabase.from('tickets')
+                            .select('is_scanned')
+                            .eq('event_id', eventId)
+                            .eq('student_email', userEmail)
+                            .single();
+                            
+                        if (tkt && tkt.is_scanned) {
+                            writeContainer.classList.remove('hidden');
+                            
+                            // Reset star selector state
+                            currentSelectedRating = 0;
+                            document.getElementById('review-text-input').value = '';
+                            document.getElementById('post-review-btn').disabled = true;
+                            document.getElementById('post-review-btn').textContent = 'Submit';
+                            document.querySelectorAll('.star-btn').forEach(b => {
+                                b.classList.add('text-gray-300');
+                                b.classList.remove('text-yellow-400');
+                            });
+                        }
+                    }
+                }
+                
+                if (reviews.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center py-10 bg-gray-50 rounded-xl border border-gray-100">
+                            <span class="text-4xl mb-3 block">⭐</span>
+                            <p class="text-gray-500 font-medium text-sm">No reviews yet. Be the first to attend and rate!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Calculate average rating
+                const avg = (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1);
+                document.getElementById('overall-rating-score').textContent = avg;
+                document.getElementById('overall-rating-count').textContent = `${reviews.length} Review${reviews.length > 1 ? 's' : ''}`;
+                
+                // Render stars for average
+                let avgStars = '';
+                for (let i = 1; i <= 5; i++) {
+                    if (i <= Math.round(avg)) avgStars += '★';
+                    else avgStars += '☆';
+                }
+                document.getElementById('overall-rating-stars').textContent = avgStars;
+                overviewContainer.classList.remove('hidden');
+                
+                list.innerHTML = '';
+                reviews.forEach(r => {
+                    const name = r.profiles?.full_name || r.user_email.split('@')[0];
+                    const d = new Date(r.created_at).toLocaleString([], {month:'short', day:'numeric', year:'numeric'});
+                    const canDelete = userEmail && (userEmail === r.user_email || currentUserRole === 'super_admin');
+                    
+                    let rStars = '';
+                    for (let i=1; i<=5; i++) { rStars += i <= r.rating ? '★' : '☆'; }
+                    
+                    const li = document.createElement('div');
+                    li.className = 'bg-white p-5 rounded-xl border border-gray-100 shadow-sm';
+                    li.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="font-bold text-gray-900 text-sm block">${name} <span class="text-green-600 ml-1 text-xs font-black bg-green-100 px-1.5 py-0.5 rounded">Verified Attendee</span></span>
+                                <div class="text-yellow-400 text-sm mt-0.5">${rStars}</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-400 font-medium">${d}</span>
+                                ${canDelete ? `<button class="text-gray-300 hover:text-red-500 transition-colors delete-rev-btn" data-id="${r.id}" title="Delete review">🗑️</button>` : ''}
+                            </div>
+                        </div>
+                        ${r.review_text ? `<p class="text-gray-700 text-sm leading-relaxed mt-2">${r.review_text}</p>` : ''}
+                    `;
+                    list.appendChild(li);
+                });
+
+                list.querySelectorAll('.delete-rev-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        if (confirm('Delete this review?')) {
+                            const { error } = await supabase.from('event_reviews').delete().eq('id', e.target.getAttribute('data-id'));
+                            if (error) alert('Error deleting review.');
+                            else loadReviews(eventId);
+                        }
+                    });
+                });
+            }
 
             fetchEvents();
         });
