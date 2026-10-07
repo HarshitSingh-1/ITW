@@ -46,6 +46,7 @@
                         <a href="wallet.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">My Wallet</a>
                         <a href="history.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">History</a>
                         <a href="admin.html" class="admin-link text-red-600 hover:text-red-800 font-bold px-3 py-2 hidden transition-colors">Admin Portal</a>
+                        <a href="scanner.html" id="nav-scanner" class="hidden text-green-600 hover:text-green-800 font-bold px-3 py-2 transition-colors">Scanner Mode</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -322,7 +323,7 @@
 
             // Allow access (Admin or Organizer)
             document.getElementById('dashboard-content').classList.remove('hidden');
-            document.getElementById('nav-scanner').classList.remove('hidden');
+            if (document.getElementById('nav-scanner')) { document.getElementById('nav-scanner').classList.remove('hidden'); }
             document.body.style.visibility = 'visible';
 
             if (currentUserRole === 'super_admin' || currentUserRole === 'organizer') {
@@ -761,6 +762,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 
