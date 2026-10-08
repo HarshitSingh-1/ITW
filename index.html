@@ -30,6 +30,7 @@
         document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>
         .poster-card:hover .poster-overlay { opacity: 1; }
@@ -71,8 +72,8 @@
                 <div class="flex items-center space-x-4">
                     <!-- Theme Switcher -->
                     <select id="theme-selector" class="theme-bg-surface theme-text-main theme-border border rounded-lg text-sm px-2 py-1 font-medium focus:outline-none focus:ring-2 focus:ring-theme-accent cursor-pointer">
-                        <option value="light">☀️ Light</option>
-                        <option value="dark">🌙 Dark</option>
+                        <option value="light">&#x2600;&#xFE0F; Light</option>
+                        <option value="dark">&#x1F319; Dark</option>
                         
                     </select>
 
@@ -768,51 +769,95 @@
                 });
             }
 
-            // Booking Logic
+            // Booking Logic (Razorpay Integration)
             document.getElementById('book-btn').addEventListener('click', async () => {
                 const event = eventsData.find(e => e.id === currentEventId);
                 if (!event || !userEmail) return;
 
                 const btn = document.getElementById('book-btn');
-                btn.disabled = true; btn.textContent = 'Booking...';
-
-                const randomStr = Math.random().toString(36).substring(2, 10);
-                const qrString = `TKT-${event.id}-${randomStr}`;
+                btn.disabled = true; btn.textContent = 'Initializing Payment...';
 
                 try {
-                    const { data: success, error } = await supabase.rpc('book_ticket_safe', {
-                        p_event_id: event.id,
-                        p_student_email: userEmail,
-                        p_qr_string: qrString
+                    // 1. Create Order on Backend
+                    const orderRes = await fetch('/api/create-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ amount: 150, receipt: 'rcpt_' + Date.now() })
                     });
+                    
+                    const orderData = await orderRes.json();
+                    if (!orderRes.ok) throw new Error(orderData.error || 'Failed to create order');
 
-                    if (error) throw error;
+                    // 2. Open Razorpay Modal
+                    const options = {
+                        "key": "rzp_test_YourKeyHere", // Razorpay SDK requires the public Key ID here. The backend uses the Secret.
+                        "amount": "15000",
+                        "currency": "INR",
+                        "name": "IIITNR Events",
+                        "description": event.title,
+                        "order_id": orderData.orderId,
+                        "handler": async function (response) {
+                            btn.textContent = 'Verifying Payment...';
+                            
+                            // 3. Verify Signature on Backend
+                            const verifyRes = await fetch('/api/verify-payment', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(response)
+                            });
+                            
+                            const verifyData = await verifyRes.json();
+                            if (verifyData.success) {
+                                btn.textContent = 'Generating Ticket...';
+                                // 4. Book Ticket Safely in Supabase
+                                const randomStr = Math.random().toString(36).substring(2, 10);
+                                const qrString = `TKT-${event.id}-${randomStr}`;
 
-                    if (success) {
-                        showNotification(`Ticket Confirmed! Go to My Wallet to view it.`);
-                        // Update button locally
-                        btn.textContent = 'Already Booked';
-                        btn.className = 'bg-gray-400 text-white font-black py-3 px-10 rounded-full cursor-not-allowed shadow-none';
-                        
-                        // Update Capacity Locally
-                        event.tickets_sold++;
-                        document.getElementById('detail-capacity-text').textContent = `${event.tickets_sold} / ${event.total_capacity}`;
-                        const newFill = Math.min(100, (event.tickets_sold / event.total_capacity) * 100);
-                        document.getElementById('detail-capacity-bar').style.width = `${newFill}%`;
-                        if(newFill >= 100) document.getElementById('detail-capacity-bar').classList.add('bg-red-500');
-                    } else {
-                        showNotification(`Failed to book. Event is sold out.`, 'error');
-                        btn.textContent = 'Sold Out';
-                    }
-                } catch (err) {
-                    if (err.code === '23505') {
-                        showNotification(`You already have a ticket for this event!`, 'error');
-                        btn.textContent = 'Already Booked';
-                    }
-                    else {
-                        showNotification(`An error occurred.`, 'error');
+                                const { data: success, error: rpcError } = await supabase.rpc('book_ticket_safe', {
+                                    p_event_id: event.id,
+                                    p_student_email: userEmail,
+                                    p_qr_string: qrString
+                                });
+
+                                if (rpcError) throw rpcError;
+
+                                showNotification(`Payment Successful! Ticket Confirmed.`);
+                                btn.textContent = 'Already Booked';
+                                btn.className = 'bg-gray-400 text-white font-black py-3 px-10 rounded-full cursor-not-allowed shadow-none';
+                                
+                                event.tickets_sold++;
+                                document.getElementById('detail-capacity-text').textContent = `${event.tickets_sold} / ${event.total_capacity}`;
+                                const newFill = Math.min(100, (event.tickets_sold / event.total_capacity) * 100);
+                                document.getElementById('detail-capacity-bar').style.width = `${newFill}%`;
+                            } else {
+                                showNotification(`Payment Verification Failed!`, 'error');
+                                btn.disabled = false; btn.textContent = 'Book Ticket';
+                            }
+                        },
+                        "prefill": {
+                            "email": userEmail
+                        },
+                        "theme": {
+                            "color": "#2563eb"
+                        },
+                        "modal": {
+                            "ondismiss": function() {
+                                btn.disabled = false; btn.textContent = 'Book Ticket';
+                            }
+                        }
+                    };
+
+                    const rzp = new window.Razorpay(options);
+                    rzp.on('payment.failed', function (response) {
+                        showNotification(response.error.description, 'error');
                         btn.disabled = false; btn.textContent = 'Book Ticket';
-                    }
+                    });
+                    rzp.open();
+
+                } catch (error) {
+                    console.error('Payment/Booking Error:', error);
+                    showNotification(error.message || `An error occurred.`, 'error');
+                    btn.disabled = false; btn.textContent = 'Book Ticket';
                 }
             });
 
