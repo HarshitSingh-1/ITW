@@ -93,7 +93,7 @@
             
             <!-- Hero Carousel -->
             <div id="hero-carousel-container" class="mb-10 hidden">
-                <h2 class="text-xl font-black text-gray-900 tracking-tight mb-4">Trending Now 🔥</h2>
+                <h2 class="text-xl font-black theme-text-main tracking-tight mb-4">Trending Now 🔥</h2>
                 <div id="hero-carousel" class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4" style="scrollbar-width: none; -ms-overflow-style: none;">
                     <!-- Slides injected by JS -->
                 </div>
@@ -143,7 +143,7 @@
             <!-- Content Area -->
             <div class="max-w-4xl mx-auto px-4 sm:px-6 -mt-20 relative z-10">
                 <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-100">
-                    <h1 id="detail-title" class="text-3xl md:text-5xl font-black text-gray-900 tracking-tight mb-4">Event Title</h1>
+                    <h1 id="detail-title" class="text-3xl md:text-5xl font-black theme-text-main tracking-tight mb-4">Event Title</h1>
                     
                     <div class="flex flex-wrap gap-4 mb-8 text-sm font-medium text-gray-700">
                         <div class="flex items-center bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
@@ -207,7 +207,7 @@
                     <div id="content-reviews" class="detail-tab-content hidden">
                         <!-- Overall Rating -->
                         <div id="overall-rating-container" class="flex items-center space-x-4 mb-8 hidden">
-                            <div class="text-4xl font-black text-gray-900" id="overall-rating-score">0.0</div>
+                            <div class="text-4xl font-black theme-text-main" id="overall-rating-score">0.0</div>
                             <div>
                                 <div class="text-yellow-400 text-xl tracking-widest" id="overall-rating-stars">★★★★★</div>
                                 <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mt-1" id="overall-rating-count">0 Reviews</p>
@@ -216,7 +216,7 @@
                         
                         <!-- Write Review Form (Hidden by default, shown if scanned) -->
                         <div id="write-review-container" class="bg-yellow-50 rounded-xl p-5 mb-8 border border-yellow-100 hidden">
-                            <h4 class="font-bold text-gray-900 mb-2">Leave a Review</h4>
+                            <h4 class="font-bold theme-text-main mb-2">Leave a Review</h4>
                             <p class="text-xs text-gray-600 mb-4">You attended this event! How was your experience?</p>
                             <div class="flex space-x-2 mb-4" id="star-selector">
                                 <button class="text-3xl text-gray-300 hover:text-yellow-400 focus:outline-none star-btn transition-colors" data-val="1">★</button>
@@ -244,7 +244,7 @@
             <div class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-gray-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-50 p-4 transition-all">
                 <div class="max-w-4xl mx-auto flex justify-between items-center">
                     <div>
-                        <p class="font-bold text-gray-900" id="sticky-title">Event Title</p>
+                        <p class="font-bold theme-text-main" id="sticky-title">Event Title</p>
                         <p class="text-xs text-green-600 font-bold" id="sticky-price">Free Entry</p>
                     </div>
                     <button id="book-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-10 rounded-full focus:outline-none transition-transform active:scale-95 shadow-lg">
@@ -670,7 +670,7 @@
                 el.innerHTML = `
                     <div class="flex justify-between items-start mb-1">
                         <div class="flex items-center">
-                            <span class="font-bold text-gray-900 text-sm">${name}</span>
+                            <span class="font-bold theme-text-main text-sm">${name}</span>
                             ${badges}
                         </div>
                         <div class="flex items-center gap-2">
@@ -1017,7 +1017,7 @@
                     li.innerHTML = `
                         <div class="flex justify-between items-start mb-2">
                             <div>
-                                <span class="font-bold text-gray-900 text-sm block">${name} <span class="text-green-600 ml-1 text-xs font-black bg-green-100 px-1.5 py-0.5 rounded">Verified Attendee</span></span>
+                                <span class="font-bold theme-text-main text-sm block">${name} <span class="text-green-600 ml-1 text-xs font-black bg-green-100 px-1.5 py-0.5 rounded">Verified Attendee</span></span>
                                 <div class="text-yellow-400 text-sm mt-0.5">${rStars}</div>
                             </div>
                             <div class="flex items-center gap-2">
