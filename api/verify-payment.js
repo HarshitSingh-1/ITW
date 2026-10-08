@@ -5,12 +5,13 @@ export default async function handler(req, res) {
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     
-    const KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || "YOUR_TEST_KEY_SECRET";
+    // Hardcoded Test Secret
+    const KEY_SECRET = "8dozc6Ch4EQnyh0XIlBMB0jN";
 
     // Create HMAC SHA256 string
     const generated_signature = crypto
         .createHmac('sha256', KEY_SECRET)
-        .update("${razorpay_order_id}|${razorpay_payment_id}")
+        .update(razorpay_order_id + '|' + razorpay_payment_id)
         .digest('hex');
 
     if (generated_signature === razorpay_signature) {
