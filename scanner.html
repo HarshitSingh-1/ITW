@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -165,13 +165,13 @@
 
                 if (state === 'success') {
                     resultIcon.className = "w-24 h-24 mb-4 rounded-full flex items-center justify-center bg-green-500 text-white text-5xl";
-                    resultIcon.innerHTML = "✓";
+                    resultIcon.innerHTML = "âœ“";
                 } else if (state === 'used') {
                     resultIcon.className = "w-24 h-24 mb-4 rounded-full flex items-center justify-center bg-yellow-500 text-white text-5xl";
                     resultIcon.innerHTML = "!";
                 } else {
                     resultIcon.className = "w-24 h-24 mb-4 rounded-full flex items-center justify-center bg-red-600 text-white text-5xl";
-                    resultIcon.innerHTML = "✗";
+                    resultIcon.innerHTML = "âœ—";
                 }
             }
 
@@ -231,7 +231,7 @@
                         return;
                     }
                     if (now > endOfEvent) {
-                        showResult('error', 'Too Late', `Scanning for "${eventTitle}" ended on ${endOfEvent.toLocaleDateString()} at ${endOfEvent.toLocaleTimeString()}.`);
+                        showResult('error', 'Too Late', `Scanning for "${eventTitle}" ended on ${endOfEvent.toLocaleDateString('en-GB')} at ${endOfEvent.toLocaleTimeString()}.`);
                         return;
                     }
 
@@ -261,6 +261,7 @@
     </script>
 </body>
 </html>
+
 
 
 
