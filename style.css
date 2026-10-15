@@ -10,6 +10,7 @@
     --accent-hover: #1d4ed8; /* blue-700 */
     --nav-glass: rgba(255, 255, 255, 0.8);
     --shadow-color: rgba(0, 0, 0, 0.05);
+    --calendar-filter: none;
 }
 
 [data-theme="dark"] {
@@ -22,9 +23,8 @@
     --accent-hover: #60a5fa; /* blue-400 */
     --nav-glass: rgba(2, 6, 23, 0.8);
     --shadow-color: rgba(0, 0, 0, 0.3);
+    --calendar-filter: invert(1);
 }
-
-
 
 body {
     background-color: var(--bg-base);
@@ -40,5 +40,44 @@ body {
 .theme-text-muted { color: var(--text-muted); }
 .theme-border { border-color: var(--border-color); }
 .theme-nav-glass { background-color: var(--nav-glass); }
+
+/* Form Inputs & Controls for Dark/Light Themes */
+.glass-input, 
+input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]), 
+select, 
+textarea {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.glass-input:focus, 
+input:not([type="submit"]):not([type="button"]):focus, 
+select:focus, 
+textarea:focus {
+    outline: none !important;
+    border-color: var(--accent-main) !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25) !important;
+}
+
+.glass-input::placeholder, 
+input::placeholder, 
+textarea::placeholder {
+    color: var(--text-muted) !important;
+    opacity: 0.7;
+}
+
+select option {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+}
+
+/* Make date/time picker calendar icons readable in dark mode */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: var(--calendar-filter);
+    cursor: pointer;
+}
 
 

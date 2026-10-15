@@ -422,10 +422,13 @@
                 }
 
                 try {
+                    const now = new Date().toISOString();
+                    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
                     const { data: events, error } = await supabase
                         .from('events')
                         .select('*')
-                        .gte('event_date', new Date().toISOString())
+                        .or(`category.eq.Donations,event_end_date.gte.${now},event_date.gte.${yesterday}`)
                         .order('event_date', { ascending: true });
 
                     if (error) throw error;

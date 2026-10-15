@@ -120,11 +120,12 @@
                     // Fetch tickets joined with event data
                     // Only fetch tickets where the event hasn't happened yet (or keep all and let history.html handle past ones)
                     // For the wallet, usually you only want active ones. Let's fetch where event_date >= now.
+                    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
                     const { data: tickets, error } = await supabase
                         .from('tickets')
                         .select('*, events!inner(*)') // !inner ensures we only get tickets where the event exists
                         .eq('student_email', userEmail)
-                        .gte('events.event_date', new Date().toISOString())
+                        .gte('events.event_date', yesterday)
                         .order('created_at', { ascending: false });
 
                     if (error) throw error;
