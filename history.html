@@ -29,6 +29,7 @@
         document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="certificate.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="theme-bg-base min-h-screen theme-text-main transition-colors duration-300">
@@ -115,6 +116,14 @@
             const userEmail = session.user.email;
             if(emailDisplay) emailDisplay.textContent = userEmail;
 
+            let currentStudentName = userEmail.split('@')[0];
+            try {
+                const { data: prof } = await supabase.from('profiles').select('full_name').eq('email', userEmail).single();
+                if (prof && prof.full_name) currentStudentName = prof.full_name;
+            } catch (pErr) {
+                console.warn('Could not fetch student name:', pErr);
+            }
+
             const nowIso = new Date().toISOString();
 
             // Function to format date nicely
@@ -144,23 +153,92 @@
 
                     const grid = document.getElementById('attended-grid');
                     grid.classList.remove('hidden');
+                    grid.innerHTML = '';
 
                     tickets.forEach(ticket => {
                         const event = ticket.events;
+                        const dateFormatted = new Date(event.event_date).toLocaleDateString('en-GB');
+                        const certId = `IIITNR-CERT-${ticket.id.substring(0, 8).toUpperCase()}`;
+
+                        let certHtml = '';
+                        if (event.has_certificate) {
+                            if (ticket.is_scanned) {
+                                certHtml = `
+                                    <div class="mt-4 pt-3 border-t theme-border flex gap-2">
+                                        <button class="btn-cert-preview flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95" 
+                                            data-title="${encodeURIComponent(event.title)}" 
+                                            data-date="${dateFormatted}" 
+                                            data-venue="${encodeURIComponent(event.venue || 'IIIT Naya Raipur')}" 
+                                            data-certid="${certId}">
+                                            <span>🎓</span> View Certificate
+                                        </button>
+                                        <button class="btn-cert-download px-3 py-2 border theme-border font-bold rounded-xl text-xs theme-text-main hover:theme-bg-base transition active:scale-95 flex items-center justify-center" 
+                                            data-title="${encodeURIComponent(event.title)}" 
+                                            data-date="${dateFormatted}" 
+                                            data-venue="${encodeURIComponent(event.venue || 'IIIT Naya Raipur')}" 
+                                            data-certid="${certId}"
+                                            title="Direct Download">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        </button>
+                                    </div>
+                                `;
+                            } else {
+                                certHtml = `
+                                    <div class="mt-3 pt-2.5 border-t theme-border">
+                                        <span class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
+                                            <span>🔒</span> Certificate locked (Attendance not marked)
+                                        </span>
+                                    </div>
+                                `;
+                            }
+                        }
+
                         const card = document.createElement('div');
-                        card.className = 'theme-card theme-bg-surface p-5 rounded-2xl shadow-sm opacity-90 transition-transform hover:scale-[1.02]'; // Slightly faded to imply past
+                        card.className = 'theme-card theme-bg-surface p-5 rounded-2xl shadow-sm opacity-90 transition-transform hover:scale-[1.02] flex flex-col justify-between';
                         card.innerHTML = `
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="font-bold theme-text-main">${event.title}</h3>
-                                ${ticket.is_scanned 
-                                    ? '<span class="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded">Attended</span>'
-                                    : '<span class="text-xs font-semibold text-red-700 bg-red-100 px-2 py-1 rounded">Missed</span>'
-                                }
+                            <div>
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="font-bold theme-text-main line-clamp-1">${event.title}</h3>
+                                    ${ticket.is_scanned 
+                                        ? '<span class="text-xs font-semibold text-green-700 bg-green-100 dark:bg-green-950 dark:text-green-300 px-2 py-1 rounded">Attended</span>'
+                                        : '<span class="text-xs font-semibold text-red-700 bg-red-100 dark:bg-red-950 dark:text-red-300 px-2 py-1 rounded">Missed</span>'
+                                    }
+                                </div>
+                                <div class="text-sm theme-text-muted mb-1">${formatDateTime(event.event_date)}</div>
+                                <div class="text-sm theme-text-muted">${event.venue || 'Campus Venue'}</div>
                             </div>
-                            <div class="text-sm theme-text-muted mb-1">${formatDateTime(event.event_date)}</div>
-                            <div class="text-sm theme-text-muted">${event.venue}</div>
+                            ${certHtml}
                         `;
                         grid.appendChild(card);
+                    });
+
+                    // Bind Certificate Listeners
+                    grid.querySelectorAll('.btn-cert-preview').forEach(b => {
+                        b.addEventListener('click', () => {
+                            if (window.CertificateGenerator) {
+                                window.CertificateGenerator.preview({
+                                    studentName: currentStudentName,
+                                    eventTitle: decodeURIComponent(b.getAttribute('data-title')),
+                                    eventDate: b.getAttribute('data-date'),
+                                    venue: decodeURIComponent(b.getAttribute('data-venue')),
+                                    certificateId: b.getAttribute('data-certid')
+                                });
+                            }
+                        });
+                    });
+
+                    grid.querySelectorAll('.btn-cert-download').forEach(b => {
+                        b.addEventListener('click', () => {
+                            if (window.CertificateGenerator) {
+                                window.CertificateGenerator.download({
+                                    studentName: currentStudentName,
+                                    eventTitle: decodeURIComponent(b.getAttribute('data-title')),
+                                    eventDate: b.getAttribute('data-date'),
+                                    venue: decodeURIComponent(b.getAttribute('data-venue')),
+                                    certificateId: b.getAttribute('data-certid')
+                                });
+                            }
+                        });
                     });
                 } catch (err) {
                     console.error('Error fetching attended:', err);

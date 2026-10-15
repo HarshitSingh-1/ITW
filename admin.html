@@ -242,6 +242,16 @@
                             <label class="block text-sm font-medium theme-text-main">Description</label>
                             <textarea id="description" rows="3" class="glass-input mt-1 block w-full rounded-xl py-3 px-4"></textarea>
                         </div>
+                        <!-- Certificate Option -->
+                        <div class="flex items-start space-x-3 p-4 rounded-xl border theme-border theme-bg-base">
+                            <input type="checkbox" id="has_certificate" class="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 cursor-pointer">
+                            <div>
+                                <label for="has_certificate" class="font-bold text-sm theme-text-main cursor-pointer flex items-center gap-1.5">
+                                    <span>🎓</span> Issue Participation Certificates
+                                </label>
+                                <p class="text-xs theme-text-muted mt-0.5">When enabled, students whose tickets are scanned at the venue can generate & download their verified Certificate of Participation.</p>
+                            </div>
+                        </div>
                     </div>
                     <button type="submit" id="submit-btn" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
                         Publish Event
@@ -826,6 +836,7 @@
                     venue: document.getElementById('venue').value,
                     total_capacity: parseInt(document.getElementById('total_capacity').value),
                     price: parseInt(document.getElementById('price').value) || 0,
+                    has_certificate: document.getElementById('has_certificate').checked,
                     organizer_email: currentUserEmail,
                     poster_url: finalPosterUrl,
                     scan_start_minutes_before: parseInt(document.getElementById('scan_buffer').value) || 120

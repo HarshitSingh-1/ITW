@@ -32,6 +32,7 @@
     <!-- QR Code Library via CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="certificate.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>
         .qr-code-container img {
@@ -114,6 +115,14 @@
             if (!session) return; // app.js handles redirect
             const userEmail = session.user.email;
             if(emailDisplay) emailDisplay.textContent = userEmail;
+
+            let currentStudentName = userEmail.split('@')[0];
+            try {
+                const { data: prof } = await supabase.from('profiles').select('full_name').eq('email', userEmail).single();
+                if (prof && prof.full_name) currentStudentName = prof.full_name;
+            } catch (pErr) {
+                console.warn('Could not fetch student name:', pErr);
+            }
 
             async function fetchTickets() {
                 try {
@@ -226,9 +235,19 @@
                         `;
 
                         // Action Buttons
+                        let certBtnHtml = '';
+                        if (event.has_certificate && ticket.is_scanned) {
+                            certBtnHtml = `
+                                <button id="cert-${ticket.id}" class="col-span-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95 mb-1">
+                                    <span>🎓</span> View & Download Certificate
+                                </button>
+                            `;
+                        }
+
                         const actions = document.createElement('div');
                         actions.className = 'grid grid-cols-2 gap-2 mt-1';
                         actions.innerHTML = `
+                            ${certBtnHtml}
                             <a href="${gCalUrl}" target="_blank" class="text-center theme-bg-base hover:bg-gray-200 theme-text-main font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center transition-colors">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 Calendar
@@ -242,6 +261,22 @@
                         cardWrap.appendChild(card);
                         cardWrap.appendChild(actions);
                         ticketsGrid.appendChild(cardWrap);
+
+                        // Certificate Button Listener
+                        const certBtn = document.getElementById(`cert-${ticket.id}`);
+                        if (certBtn) {
+                            certBtn.onclick = () => {
+                                if (window.CertificateGenerator) {
+                                    window.CertificateGenerator.preview({
+                                        studentName: currentStudentName,
+                                        eventTitle: event.title,
+                                        eventDate: dateString,
+                                        venue: event.venue || 'IIIT Naya Raipur',
+                                        certificateId: `IIITNR-CERT-${ticket.id.substring(0, 8).toUpperCase()}`
+                                    });
+                                }
+                            };
+                        }
 
                         // Generate QR Code inside the specific container
                         if (!ticket.is_scanned) {
