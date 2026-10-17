@@ -25,7 +25,7 @@ def create_deck():
     GREEN = RGBColor(16, 185, 129)
     RED = RGBColor(239, 68, 68)
 
-    def add_header(slide, title_text, category_text="CAMPUS EVENT & CROWDFUNDING PLATFORM"):
+    def add_header(slide, title_text, category_text="BOOKMYCOLLEGE • CAMPUS EVENT & CROWDFUNDING PLATFORM"):
         # Category / Pill
         cat_box = slide.shapes.add_textbox(Inches(0.8), Inches(0.4), Inches(11.7), Inches(0.4))
         tf_cat = cat_box.text_frame
@@ -86,7 +86,7 @@ def create_deck():
     top_bar.line.fill.background()
 
     # Title box
-    t_box = slide1.shapes.add_textbox(Inches(1.0), Inches(1.8), Inches(11.3), Inches(2.2))
+    t_box = slide1.shapes.add_textbox(Inches(1.0), Inches(1.7), Inches(11.3), Inches(2.4))
     tf1 = t_box.text_frame
     tf1.word_wrap = True
     
@@ -95,22 +95,22 @@ def create_deck():
     p_badge.font.size = Pt(11)
     p_badge.font.bold = True
     p_badge.font.color.rgb = PRIMARY_INDIGO
-    p_badge.space_after = Pt(12)
+    p_badge.space_after = Pt(10)
 
     p_main = tf1.add_paragraph()
-    p_main.text = "Campus Event & Crowdfunding Platform"
-    p_main.font.size = Pt(34)
+    p_main.text = "BookMyCollege"
+    p_main.font.size = Pt(40)
     p_main.font.bold = True
     p_main.font.color.rgb = DARK_NAVY
-    p_main.space_after = Pt(12)
+    p_main.space_after = Pt(8)
 
     p_sub = tf1.add_paragraph()
-    p_sub.text = "An all-in-one web portal featuring atomic seat booking, zero double-booking,\nin-browser QR scanning, verified certificates & festival crowdfunding."
+    p_sub.text = "All-in-One Campus Event Ticketing, Real-Time Crowdfunding & In-Browser QR Pass Platform"
     p_sub.font.size = Pt(14)
     p_sub.font.color.rgb = TEXT_MUTED
 
     # Bottom Meta Card
-    meta_shape = slide1.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(1.0), Inches(4.7), Inches(11.333), Inches(1.6))
+    meta_shape = slide1.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(1.0), Inches(4.7), Inches(11.333), Inches(1.7))
     meta_shape.fill.solid()
     meta_shape.fill.fore_color.rgb = CARD_BG
     meta_shape.line.color.rgb = CARD_BORDER
@@ -120,14 +120,14 @@ def create_deck():
     meta_tf.margin_top = Inches(0.25)
     
     mp1 = meta_tf.paragraphs[0]
-    mp1.text = "Technology Stack & Core Specifications"
+    mp1.text = "BookMyCollege Core Architecture & Highlights"
     mp1.font.size = Pt(11.5)
     mp1.font.bold = True
     mp1.font.color.rgb = DARK_NAVY
     mp1.space_after = Pt(6)
 
     mp2 = meta_tf.add_paragraph()
-    mp2.text = "Frontend: HTML5, Tailwind CSS, Vanilla JavaScript (Single Page Architecture, Mobile Responsive)\nDatabase & Auth: Supabase (PostgreSQL 15), ACID Row-Level Security | Payments: Razorpay Serverless Node.js APIs\nHardware Integration: WebRTC Camera Barcode Scanning | Graphics: Client-Side HTML5 Canvas Vector Engine"
+    mp2.text = "• Frontend: HTML5, Tailwind CSS, Vanilla JavaScript (Single Page Architecture, 100% Mobile Responsive)\n• Cloud Backend: Supabase (PostgreSQL 15), ACID Row-Level Locking | Payments: Razorpay Serverless API\n• Innovations: Zero Double-Booking, Instant Auto-Refunds, In-Browser Camera Scanner & Locked Canvas Certificates"
     mp2.font.size = Pt(10)
     mp2.font.color.rgb = TEXT_MUTED
 
@@ -136,7 +136,7 @@ def create_deck():
     add_header(slide2, "The Problem: Why Traditional College Events Fail")
 
     add_card(slide2, Inches(0.8), Inches(1.8), Inches(3.6), Inches(4.8), 
-             "1. Messy Google Forms & WhatsApp", 
+             "1. Messy Forms & WhatsApp", 
              [
                  "Clubs collect registrations via unstructured Google Forms.",
                  "Students send payment screenshots on WhatsApp groups.",
@@ -147,14 +147,14 @@ def create_deck():
     add_card(slide2, Inches(4.8), Inches(1.8), Inches(3.6), Inches(4.8), 
              "2. Fake Tickets & Proxy Attendance", 
              [
-                 "No reliable check-in at the auditorium door.",
+                 "No reliable check-in system at the auditorium door.",
                  "Students forward PDF passes or screenshot QR codes to friends for free entry.",
                  "Certificates of Participation are awarded to students who skipped the event.",
                  "Devalues college academic credentials."
              ], title_color=RED)
 
     add_card(slide2, Inches(8.8), Inches(1.8), Inches(3.6), Inches(4.8), 
-             "3. Fragmented Festival Fundraising", 
+             "3. Fragmented Fest Fundraising", 
              [
                  "Seniors asking for festival donations (Navratri, Farewell) rely on cash collection.",
                  "Zero transparency on how much money was raised versus the target goal.",
@@ -163,7 +163,7 @@ def create_deck():
 
     # ==================== SLIDE 3: THE SOLUTION ====================
     slide3 = prs.slides.add_slide(blank_layout)
-    add_header(slide3, "Our Solution: A Unified Campus Event Operating System")
+    add_header(slide3, "The Solution: BookMyCollege Unified Campus OS")
 
     add_card(slide3, Inches(0.8), Inches(1.8), Inches(5.6), Inches(2.3),
              "🎟️ 1. Smart Ticketing & Zero Double-Booking",
@@ -199,7 +199,7 @@ def create_deck():
 
     # ==================== SLIDE 4: ARCHITECTURE & TECH STACK ====================
     slide4 = prs.slides.add_slide(blank_layout)
-    add_header(slide4, "System Architecture: Decoupled & Serverless Stack")
+    add_header(slide4, "BookMyCollege Architecture & Technology Stack")
 
     add_card(slide4, Inches(0.8), Inches(1.8), Inches(2.7), Inches(4.8),
              "Frontend Client",
@@ -251,7 +251,7 @@ def create_deck():
 
     # ==================== SLIDE 5: FEATURE DEEP DIVE 1 ====================
     slide5 = prs.slides.add_slide(blank_layout)
-    add_header(slide5, "Deep Dive: Concurrency, Seat Locking & Auto-Refunds")
+    add_header(slide5, "Concurrency: How BookMyCollege Prevents Double-Booking")
 
     add_card(slide5, Inches(0.8), Inches(1.8), Inches(5.6), Inches(4.8),
              "The Double-Booking Problem",
@@ -284,7 +284,7 @@ def create_deck():
 
     # ==================== SLIDE 6: FEATURE DEEP DIVE 2 ====================
     slide6 = prs.slides.add_slide(blank_layout)
-    add_header(slide6, "Deep Dive: Zero-Trust QR Check-In & Gatekeeper Scanner")
+    add_header(slide6, "Gatekeeper Scanner: In-Browser Verification & Anti-Fraud")
 
     add_card(slide6, Inches(0.8), Inches(1.8), Inches(5.6), Inches(4.8),
              "Why Simple QR Codes are Insecure",
@@ -292,7 +292,7 @@ def create_deck():
                  "Flaw in naive systems: Putting student name or 'ADMIT 1' inside the QR code.",
                  "Any student can use a free online QR generator to create fake passes or alter details in Photoshop.",
                  "",
-                 "Our Cryptographic Architecture:",
+                 "BookMyCollege Cryptographic Architecture:",
                  "• The QR code encodes only a random 128-bit Ticket UUID.",
                  "• Contains zero readable personal text.",
                  "• The scanner performs an authenticated lookup in the database to verify the UUID.",
@@ -317,7 +317,7 @@ def create_deck():
 
     # ==================== SLIDE 7: FEATURE DEEP DIVE 3 ====================
     slide7 = prs.slides.add_slide(blank_layout)
-    add_header(slide7, "Deep Dive: Verified Certificates & Crowdfunding")
+    add_header(slide7, "Verified Certificates & Festival Crowdfunding")
 
     add_card(slide7, Inches(0.8), Inches(1.8), Inches(5.6), Inches(4.8),
              "Smart Proof-of-Attendance Certificates",
@@ -388,12 +388,12 @@ def create_deck():
 
     # ==================== SLIDE 9: LIVE DEMO FLOW ====================
     slide9 = prs.slides.add_slide(blank_layout)
-    add_header(slide9, "Step-by-Step Live Demonstration Walkthrough")
+    add_header(slide9, "BookMyCollege Live Demonstration Flow")
 
     add_card(slide9, Inches(0.8), Inches(1.8), Inches(2.2), Inches(4.8),
              "Step 1: Discover",
              [
-                 "Open Home Portal.",
+                 "Open BookMyCollege.",
                  "Use 0ms live search and category chips.",
                  "Toggle Dark / Light mode.",
                  "Inspect festival crowdfunding campaign."
@@ -460,7 +460,7 @@ def create_deck():
              [
                  "Answer: College volunteers change for every event.",
                  "Installing APKs on 20 student phones causes delays.",
-                 "Our web scanner runs instantly on mobile Chrome/Safari with zero installation."
+                 "BookMyCollege scanner runs instantly on mobile Chrome/Safari with zero installation."
              ], title_color=ACCENT_BLUE)
 
     add_card(slide10, Inches(6.8), Inches(4.4), Inches(5.6), Inches(2.3),
@@ -519,8 +519,8 @@ def create_deck():
     cp1.space_after = Pt(10)
 
     cp2 = c_tf.add_paragraph()
-    cp2.text = "Campus Event & Crowdfunding Platform"
-    cp2.font.size = Pt(28)
+    cp2.text = "BookMyCollege"
+    cp2.font.size = Pt(36)
     cp2.font.bold = True
     cp2.font.color.rgb = DARK_NAVY
     cp2.space_after = Pt(12)
