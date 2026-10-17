@@ -56,12 +56,14 @@
     </style>
 </head>
 <body class="theme-bg-base min-h-screen theme-text-main transition-colors duration-300">
-    <!-- Navbar -->
+    <!-- Navbar (Responsive Desktop & Mobile) -->
     <nav class="theme-nav-glass backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.02)] border-b theme-border sticky top-0 z-50 transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
+                    <!-- Brand Logo -->
                     <h1 class="text-2xl font-black text-theme-accent tracking-tighter cursor-pointer hover:scale-105 transition-transform" onclick="window.location.reload()">EVENTS</h1>
+                    <!-- Desktop Navigation Links (Visible on tablets/desktops >= 768px) -->
                     <div class="hidden md:flex space-x-4">
                         <a href="index.html" class="text-theme-accent font-bold px-3 py-2">Home</a>
                         <a href="wallet.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">My Wallet</a>
@@ -69,16 +71,45 @@
                         <a href="admin.html" class="admin-link text-red-600 hover:text-red-800 font-bold px-3 py-2 hidden transition-colors">Admin Portal</a>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <!-- Theme Switcher -->
+                <!-- Right Action Bar: Theme Toggle, User Display, Logout, and Mobile Menu Toggle -->
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <!-- Theme Switcher (Light / Dark mode selector) -->
                     <select id="theme-selector" class="theme-bg-surface theme-text-main theme-border border rounded-lg text-sm px-2 py-1 font-medium focus:outline-none focus:ring-2 focus:ring-theme-accent cursor-pointer">
                         <option value="light">&#x2600;&#xFE0F; Light</option>
                         <option value="dark">&#x1F319; Dark</option>
-                        
                     </select>
 
                     <span id="user-email-display" class="text-sm theme-text-muted hidden md:block font-medium"></span>
-                    <button id="logout-btn" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm font-bold transition-colors">Log Out</button>
+                    <button id="logout-btn" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold transition-colors">Log Out</button>
+
+                    <!-- Mobile Hamburger Button (Visible on screens < 768px) -->
+                    <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl border theme-border theme-text-main hover:theme-bg-surface focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" aria-label="Toggle Navigation Menu">
+                        <svg id="hamburger-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        <svg id="close-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation Dropdown Menu (Smooth collapsible container for phones) -->
+            <div id="mobile-menu" class="hidden md:hidden border-t theme-border py-3 px-2 space-y-1.5 theme-bg-surface rounded-b-2xl shadow-xl">
+                <a href="index.html" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40">
+                    <span class="text-base">🏠</span> Home Feed
+                </a>
+                <a href="wallet.html" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium theme-text-muted hover:theme-text-main hover:theme-bg-base transition-colors">
+                    <span class="text-base">🎟️</span> My Ticket Wallet
+                </a>
+                <a href="history.html" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium theme-text-muted hover:theme-text-main hover:theme-bg-base transition-colors">
+                    <span class="text-base">📜</span> Event History
+                </a>
+                <a href="admin.html" class="admin-link hidden flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                    <span class="text-base">⚡</span> Admin & Organizer Portal
+                </a>
+                <div class="pt-2 border-t theme-border mt-2 px-3">
+                    <span class="user-email-mobile text-xs theme-text-muted block truncate font-mono"></span>
                 </div>
             </div>
         </div>
@@ -430,12 +461,22 @@
                 window.scrollTo(0, 0);
             };
 
-            // Global variable to hold loaded events for quick access
+            // =========================================================================
+            // CLIENT-SIDE STATE MANAGEMENT & FILTERING
+            // =========================================================================
+            // Cache of all loaded event objects fetched from Supabase
             let eventsData = [];
-
+            // Active category chip filter ('All', 'Technical', 'Cultural', 'Donations', etc.)
             let currentCategory = 'All';
+            // Search query string typed by the student in the search bar
             let currentSearchTerm = '';
 
+            /**
+             * filterGrid:
+             * Performs multi-dimensional, zero-latency client-side filtering on the rendered event cards.
+             * Matches both the selected category and search keywords against title & venue.
+             * Toggles empty state placeholder if no matching events are found.
+             */
             function filterGrid() {
                 const grid = document.getElementById('events-grid');
                 const emptyMsg = document.getElementById('no-events-msg');
@@ -448,18 +489,18 @@
                     const event = eventsData.find(e => e.id === eventId);
                     if(!event) return;
 
-                    // Category Filter
+                    // 1. Category Filter Match
                     const matchCategory = currentCategory === 'All' || event.category === currentCategory;
                     
-                    // Search Filter
+                    // 2. Search Keyword Match (checks Event Title and Campus Venue)
                     let matchSearch = true;
                     if (term) {
                         const title = event.title?.toLowerCase() || '';
                         const venue = event.venue?.toLowerCase() || '';
-                        // Removed description from search so it feels more predictable
                         matchSearch = title.includes(term) || venue.includes(term);
                     }
 
+                    // Card visibility toggle
                     if (matchCategory && matchSearch) {
                         card.style.display = 'block';
                         visibleCount++;
@@ -468,6 +509,7 @@
                     }
                 });
 
+                // Display user-friendly placeholder when zero events match the filter
                 if (visibleCount === 0) {
                     grid.classList.add('hidden');
                     emptyMsg.classList.remove('hidden');
@@ -478,18 +520,18 @@
                 }
             }
 
-            // Bind Listeners
+            // Real-time instant search listener
             document.getElementById('search-input').addEventListener('input', (e) => {
                 currentSearchTerm = e.target.value;
                 filterGrid();
             });
 
+            // Interactive category pill selector listeners
             document.querySelectorAll('.category-chip').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    // Update active styling
+                    // Update active CSS highlight on selected pill
                     document.querySelectorAll('.category-chip').forEach(b => {
                         b.classList.remove('active');
-                        
                     });
                     
                     e.target.classList.add('active');
@@ -499,11 +541,19 @@
                 });
             });
 
+            /**
+             * fetchEvents:
+             * Fetches all live campus events from the Supabase PostgreSQL database.
+             * 1. Displays pulse skeleton placeholders during network request.
+             * 2. Queries 'events' table, filtering out past events while keeping active crowdfunding campaigns.
+             * 3. Calculates Top 3 Trending events for the Hero Carousel.
+             * 4. Renders responsive event poster cards with real-time badges (Sold Out, Certificate, Pricing).
+             */
             async function fetchEvents() {
                 const grid = document.getElementById('events-grid');
                 const loader = document.getElementById('events-loading');
                 
-                // Show Skeletons
+                // Show Animated Skeleton Placeholders while fetching
                 loader.classList.add('hidden');
                 grid.classList.remove('hidden');
                 grid.innerHTML = '';
@@ -519,6 +569,9 @@
                     const now = new Date().toISOString();
                     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
+                    // Supabase Query:
+                    // Keeps all Donations campaigns active, or events whose end date is in the future,
+                    // or events starting within the last 24h buffer for same-day access.
                     const { data: events, error } = await supabase
                         .from('events')
                         .select('*')
@@ -530,7 +583,9 @@
                     eventsData = events;
                     grid.innerHTML = '';
                     
-                    // --- Hero Carousel Logic ---
+                    // =====================================================================
+                    // HERO CAROUSEL: TRENDING EVENTS SHOWCASE
+                    // =====================================================================
                     const heroContainer = document.getElementById('hero-carousel-container');
                     const heroTrack = document.getElementById('hero-carousel');
                     
@@ -538,7 +593,7 @@
                         heroContainer.classList.remove('hidden');
                         heroTrack.innerHTML = '';
                         
-                        // Get top 3 upcoming events by popularity
+                        // Sort by popularity (highest tickets_sold first) and take top 3
                         const trending = [...events].sort((a,b) => b.tickets_sold - a.tickets_sold).slice(0, 3);
                         
                         trending.forEach(event => {
@@ -564,7 +619,9 @@
                         heroContainer.classList.add('hidden');
                     }
                     
-                    // --- Grid Logic ---
+                    // =====================================================================
+                    // GRID CARDS: COMPREHENSIVE EVENT FEED RENDERING
+                    // =====================================================================
                     events.forEach(event => {
                         const dateObj = new Date(event.event_date);
                         const isSoldOut = event.tickets_sold >= event.total_capacity;
@@ -575,10 +632,12 @@
                         card.setAttribute('data-id', event.id);
                         card.onclick = () => openDetailView(event.id);
                         
+                        // Category Pill Tag
                         const catPill = event.category && event.category !== 'General' 
                             ? `<div class="absolute top-2 left-2 bg-theme-accent/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">${event.category}</div>` 
                             : '';
 
+                        // Certificate Eligibility Tag (Shows if organizer enabled certificate)
                         const certPill = event.has_certificate 
                             ? `<div class="absolute top-2 right-2 bg-amber-500/95 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded shadow flex items-center gap-1"><span>🎓</span> Cert</div>`
                             : '';
@@ -601,6 +660,7 @@
                         grid.appendChild(card);
                     });
                     
+                    // Apply current active filters after populating DOM
                     filterGrid();
 
                 } catch (err) {
@@ -611,18 +671,27 @@
                 }
             }
 
+            /**
+             * openDetailView:
+             * Transitions the student from the general feed to an individual event's comprehensive view.
+             * 1. Displays hero image, date/time, venue, description, and certificate badge.
+             * 2. Dynamically adapts between:
+             *    - Mode A: Crowdfunding / Donation campaign (preset chip amounts, goal progress bar).
+             *    - Mode B: Standard Ticketed event (seat availability progress bar, Sold Out check, pre-flight booking verification).
+             * 3. Fetches live notices, nested discussion threads, and verified reviews.
+             */
             async function openDetailView(id) {
                 const event = eventsData.find(e => e.id === id);
                 if (!event) return;
                 
                 currentEventId = event.id;
                 
-                // Toggle Views
+                // Toggle Views: Hide Feed, Show Detail
                 document.getElementById('view-feed').classList.add('hidden');
                 document.getElementById('view-detail').classList.remove('hidden');
                 window.scrollTo(0, 0);
 
-                // Populate Data
+                // Populate Poster and Metadata
                 const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600&auto=format&fit=crop';
                 document.getElementById('detail-hero-img').src = imgUrl;
                 document.getElementById('detail-title').textContent = event.title;
@@ -637,8 +706,8 @@
                     priceEl.className = 'text-xs text-green-600 font-bold';
                 }
                 
+                // Format event date and time window
                 const d = new Date(event.event_date);
-                
                 let timeStr = `${d.toLocaleDateString('en-GB')} at ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
                 if (event.event_end_date) {
                     const eD = new Date(event.event_end_date);
@@ -653,18 +722,22 @@
                 document.getElementById('detail-venue').textContent = event.venue;
                 document.getElementById('detail-description').innerText = event.description || 'No additional details provided.';
                 
+                // Official Participation Certificate Badge toggle
                 const certBadge = document.getElementById('detail-cert-badge');
                 if (certBadge) {
                     if (event.has_certificate) certBadge.classList.remove('hidden');
                     else certBadge.classList.add('hidden');
                 }
                 
-                // Toggle between Standard Event and Donation Event UI
+                // =========================================================================
+                // ADAPTIVE INTERFACE: DONATIONS VS STANDARD TICKETS
+                // =========================================================================
                 const isDonation = event.category === 'Donations';
                 const capacityBox = document.getElementById('capacity-counter-container');
                 const donationBox = document.getElementById('donation-widget');
 
                 if (isDonation) {
+                    // CROWDFUNDING MODE: Hide capacity bar, reveal custom contribution input & quick-select chips
                     if (capacityBox) capacityBox.classList.add('hidden');
                     if (donationBox) donationBox.classList.remove('hidden');
 
@@ -676,6 +749,7 @@
                     const donInput = document.getElementById('custom-donation-input');
                     const donChips = document.querySelectorAll('.don-chip');
 
+                    // Synchronize custom amount input with quick-select chips (e.g. ₹100, ₹250, ₹500, ₹1000)
                     function setDonationAmount(val) {
                         const num = parseInt(val) || 0;
                         if (donInput && donInput.value != num) donInput.value = num > 0 ? num : '';
@@ -702,19 +776,21 @@
                         donInput.oninput = () => setDonationAmount(donInput.value);
                     }
 
+                    // Default donation selection
                     setDonationAmount(250);
                 } else {
+                    // STANDARD EVENT MODE: Show real-time capacity fill progress bar
                     if (capacityBox) capacityBox.classList.remove('hidden');
                     if (donationBox) donationBox.classList.add('hidden');
 
-                    // Capacity counter
+                    // Real-time capacity counter & percentage calculation
                     document.getElementById('detail-capacity-text').textContent = `${event.tickets_sold} / ${event.total_capacity}`;
                     const fillPercent = Math.min(100, (event.tickets_sold / event.total_capacity) * 100);
                     document.getElementById('detail-capacity-bar').style.width = `${fillPercent}%`;
                     if(fillPercent >= 100) document.getElementById('detail-capacity-bar').classList.add('bg-red-500');
                     else document.getElementById('detail-capacity-bar').classList.remove('bg-red-500');
 
-                    // Button State
+                    // Check booking eligibility for current logged-in student
                     const btn = document.getElementById('book-btn');
                     btn.disabled = true;
                     btn.textContent = 'Checking...';
@@ -740,13 +816,21 @@
                     }
                 }
                 
-                // Reset Tabs to Overview
+                // Initialize default tab and load auxiliary event data
                 switchDetailTab('overview');
                 loadPublicNotices(event.id);
                 loadDiscussion(event.id);
                 loadReviews(event.id);
             }
 
+            /**
+             * switchDetailTab:
+             * Manages the tabbed navigation inside an event:
+             * - 'overview': Event poster, date, time, venue, description, booking CTA.
+             * - 'notices': Organizer announcements & broadcasts.
+             * - 'discussion': Public Q&A board with threaded replies.
+             * - 'reviews': 5-star ratings from verified attendees.
+             */
             function switchDetailTab(tabName) {
                 document.querySelectorAll('.detail-tab-btn').forEach(btn => {
                     btn.classList.remove('border-blue-600', 'text-blue-600');
@@ -785,23 +869,34 @@
             document.getElementById('tab-discussion').addEventListener('click', () => switchDetailTab('discussion'));
             document.getElementById('tab-reviews').addEventListener('click', () => switchDetailTab('reviews'));
 
-            // Discussion Logic
+            // =========================================================================
+            // THREADED DISCUSSION BOARD (Q&A & STUDENT CHAT)
+            // =========================================================================
+            // Keeps track of the parent comment ID if the student clicked "Reply"
             let replyingToId = null;
 
+            /**
+             * loadDiscussion:
+             * Fetches all comments for an event, joins author profile names, and checks if
+             * the commenter has a confirmed ticket to award them a "Booked" badge.
+             * Organizes raw rows into a 2-level threaded hierarchy:
+             *   Thread Parent (parent_id is null)
+             *     └── Reply (parent_id matches thread.id)
+             */
             async function loadDiscussion(eventId) {
                 const list = document.getElementById('comments-list');
                 list.innerHTML = '<div class="text-center py-6 text-gray-500 italic text-sm">Loading discussion...</div>';
                 
                 const event = eventsData.find(e => e.id === eventId);
                 
-                // Fetch comments, joining profiles for the full name
+                // Fetch comments, joining profiles table for student's full name
                 const { data: comments, error } = await supabase
                     .from('event_comments')
                     .select('*, profiles(full_name)')
                     .eq('event_id', eventId)
                     .order('created_at', { ascending: true });
 
-                // Fetch ticket holders to determine "Booked" status
+                // Fetch ticket holders to determine "Booked" verification status
                 const { data: tickets } = await supabase
                     .from('tickets')
                     .select('student_email')
@@ -826,7 +921,7 @@
                 
                 list.innerHTML = '';
                 
-                // Organize into threads (parents and children)
+                // Organize into 2-tier discussion threads (parent threads vs replies)
                 const threads = comments.filter(c => !c.parent_id);
                 const replies = comments.filter(c => c.parent_id);
 
@@ -847,6 +942,14 @@
                 });
             }
             
+            /**
+             * buildCommentUI:
+             * Constructs an individual comment DOM element.
+             * Features:
+             * - Role Badges: "Organizer" (blue badge) or "Booked" (green badge).
+             * - Granular Deletion RBAC: only the comment author, the event organizer, or a super_admin can delete.
+             * - Nested Reply Trigger: clicking "Reply" targets this comment's ID as the parent_id.
+             */
             function buildCommentUI(comment, event, bookedEmails) {
                 const el = document.createElement('div');
                 el.className = 'bg-white p-4 rounded-xl border border-gray-100 shadow-sm';
@@ -877,6 +980,7 @@
                     ${!comment.parent_id ? `<button class="text-xs text-blue-600 font-bold hover:underline reply-btn" data-id="${comment.id}">Reply</button>` : ''}
                 `;
                 
+                // Delete button event listener
                 if (canDelete) {
                     el.querySelector('.delete-btn').addEventListener('click', async (e) => {
                         if (confirm('Delete this comment?')) {
@@ -887,6 +991,7 @@
                     });
                 }
                 
+                // Reply button listener (populates input with "Replying to [Name]")
                 if (!comment.parent_id) {
                     el.querySelector('.reply-btn').addEventListener('click', (e) => {
                         replyingToId = e.target.getAttribute('data-id');
@@ -901,12 +1006,14 @@
                 return el;
             }
             
+            // Cancels active reply target and resets input placeholder to root thread
             window.cancelReply = () => {
                 replyingToId = null;
                 document.getElementById('new-comment-input').placeholder = 'Ask a question or share your thoughts...';
                 document.getElementById('comment-status').innerHTML = '';
             };
 
+            // Post new comment or reply listener
             document.getElementById('post-comment-btn').addEventListener('click', async () => {
                 if (!userEmail) {
                     alert('You must be logged in to post a comment.');
@@ -921,6 +1028,7 @@
                 btn.disabled = true;
                 btn.textContent = 'Posting...';
                 
+                // Inserts into Supabase 'event_comments' with parent_id if replying
                 const { error } = await supabase.from('event_comments').insert([{
                     event_id: currentEventId,
                     user_email: userEmail,
@@ -940,6 +1048,10 @@
                 }
             });
 
+            /**
+             * loadPublicNotices:
+             * Fetches and displays official organizer announcements (e.g. venue shifts, schedule changes).
+             */
             async function loadPublicNotices(eventId) {
                 const list = document.getElementById('public-notices-list');
                 list.innerHTML = '<li class="text-gray-500 italic text-sm text-center py-6">Loading notices...</li>';
@@ -976,7 +1088,14 @@
                 });
             }
 
-            // Function to load and display live donation progress
+            /**
+             * loadDonationStats:
+             * Real-time aggregation engine for crowdfunding campaigns.
+             * 1. Fetches all recorded contributions from Supabase 'event_donations'.
+             * 2. Computes the sum total raised and contributor count.
+             * 3. Calculates percentage of the organizer's financial target goal.
+             * 4. Dynamically updates the crowdfunding progress bar.
+             */
             async function loadDonationStats(event) {
                 const totalEl = document.getElementById('donation-total-raised');
                 const countEl = document.getElementById('donation-contributors-count');
@@ -995,12 +1114,14 @@
                         return;
                     }
 
+                    // Sum all student donations
                     const totalRaised = (donations || []).reduce((sum, d) => sum + (d.amount || 0), 0);
                     const count = donations ? donations.length : 0;
 
                     if (totalEl) totalEl.textContent = '₹' + totalRaised.toLocaleString();
                     if (countEl) countEl.textContent = `${count} Contribution${count === 1 ? '' : 's'}`;
 
+                    // If a target goal exists (> 0), compute progress percentage
                     if (event.price && event.price > 0) {
                         if (goalBox) goalBox.classList.remove('hidden');
                         const pct = Math.min(100, Math.round((totalRaised / event.price) * 100));
@@ -1021,7 +1142,11 @@
 
                 const btn = document.getElementById('book-btn');
 
-                // --- BRANCH A: DONATION / CROWDFUNDING EVENT ---
+                // =========================================================================
+                // BRANCH A: DONATION / CROWDFUNDING CONTRIBUTION FLOW
+                // =========================================================================
+                // When an event is categorized as "Donations", students can contribute custom
+                // amounts to support senior fest budgets, club hackathons, or charity drives.
                 if (event.category === 'Donations') {
                     const customInp = document.getElementById('custom-donation-input');
                     const donAmt = parseInt(customInp ? customInp.value : 0) || 0;
@@ -1034,6 +1159,7 @@
                     btn.textContent = 'Initializing Payment...';
 
                     try {
+                        // Step 1: Create a Razorpay Order on the secure serverless backend
                         const orderRes = await fetch('/api/create-order', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -1043,9 +1169,10 @@
                         const orderData = await orderRes.json();
                         if (!orderRes.ok) throw new Error(orderData.error || 'Failed to create order');
 
+                        // Step 2: Configure and open Razorpay Checkout modal
                         const options = {
                             "key": "rzp_test_TlHHyvp8triN6e",
-                            "amount": donAmt * 100,
+                            "amount": donAmt * 100, // Amount in paise
                             "currency": "INR",
                             "name": "IIITNR Crowdfunding",
                             "description": event.title,
@@ -1053,6 +1180,7 @@
                             "handler": async function (response) {
                                 btn.textContent = 'Verifying Contribution...';
                                 
+                                // Step 3: Verify Razorpay HMAC-SHA256 signature on backend
                                 const verifyRes = await fetch('/api/verify-payment', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
@@ -1063,6 +1191,7 @@
                                 if (verifyData.success) {
                                     btn.textContent = 'Recording Contribution...';
                                     
+                                    // Step 4: Record contribution ledger in Supabase table 'event_donations'
                                     const { error: donErr } = await supabase.from('event_donations').insert([{
                                         event_id: event.id,
                                         student_email: userEmail,
@@ -1076,6 +1205,7 @@
                                     showNotification(`Thank you! Your contribution of ₹${donAmt} was received 🎉`);
                                     btn.disabled = false;
                                     btn.textContent = `Contribute ₹${donAmt} 💖`;
+                                    // Refresh live crowdfunding progress bar and total count
                                     loadDonationStats(event);
                                 } else {
                                     showNotification(`Payment verification failed!`, 'error');
@@ -1087,7 +1217,7 @@
                                 "email": userEmail
                             },
                             "theme": {
-                                "color": "#f59e0b"
+                                "color": "#f59e0b" // Warm Amber theme for donations
                             },
                             "modal": {
                                 "ondismiss": function() {
@@ -1114,10 +1244,20 @@
                     return;
                 }
 
-                // --- BRANCH B: STANDARD EVENT TICKET BOOKING ---
+                // =========================================================================
+                // BRANCH B: STANDARD EVENT TICKET BOOKING WITH CONCURRENCY PROTECTION
+                // =========================================================================
                 const price = event.price || 0;
                 btn.disabled = true; btn.textContent = 'Processing...';
 
+                /**
+                 * completeBooking:
+                 * Calls Supabase stored procedure `book_ticket_safe` which executes:
+                 *   SELECT FOR UPDATE (exclusive lock on event row)
+                 *   Checks tickets_sold < total_capacity
+                 *   Inserts ticket with unique QR string and increments tickets_sold atomically.
+                 * If sold out, it returns FALSE, throwing CAPACITY_EXCEEDED to trigger auto-refund.
+                 */
                 const completeBooking = async () => {
                     const randomStr = Math.random().toString(36).substring(2, 10);
                     const qrString = `TKT-${event.id}-${randomStr}`;
@@ -1130,6 +1270,7 @@
 
                     if (rpcError) throw rpcError;
                     if (success !== true) {
+                        // All seats taken while user was in checkout!
                         throw new Error('CAPACITY_EXCEEDED');
                     }
 
@@ -1145,7 +1286,7 @@
                 };
 
                 try {
-                    // Pre-flight check: Re-verify real-time availability from database before initiating payment
+                    // PRE-FLIGHT CHECK: Re-verify real-time availability from Supabase before opening payment
                     const { data: latestEvt } = await supabase
                         .from('events')
                         .select('total_capacity, tickets_sold')
@@ -1165,7 +1306,7 @@
 
                     if (price > 0) {
                         btn.textContent = 'Initializing Payment...';
-                        // 1. Create Order on Backend
+                        // 1. Create Razorpay Order on serverless backend
                         const orderRes = await fetch('/api/create-order', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -1175,7 +1316,7 @@
                         const orderData = await orderRes.json();
                         if (!orderRes.ok) throw new Error(orderData.error || 'Failed to create order');
 
-                        // 2. Open Razorpay Modal
+                        // 2. Open Razorpay Modal for student
                         const options = {
                             "key": "rzp_test_TlHHyvp8triN6e",
                             "amount": price * 100,
@@ -1186,7 +1327,7 @@
                             "handler": async function (response) {
                                 btn.textContent = 'Verifying Payment...';
                                 
-                                // 3. Verify Signature on Backend
+                                // 3. Verify Razorpay cryptographic signature on backend
                                 const verifyRes = await fetch('/api/verify-payment', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
@@ -1199,10 +1340,14 @@
                                     try {
                                         await completeBooking();
                                     } catch (bookingErr) {
+                                        // ---------------------------------------------------------
+                                        // RACE CONDITION HANDLER: AUTOMATIC INSTANT REFUND API
+                                        // ---------------------------------------------------------
+                                        // Payment captured, but the last ticket was taken by another attendee.
+                                        // Automatically refund student payment via Razorpay Refund API
                                         console.error('Booking failed post-payment capture:', bookingErr);
                                         btn.textContent = 'Event Full! Refunding...';
                                         
-                                        // Trigger Instant Automatic Refund via Razorpay API
                                         try {
                                             const refundRes = await fetch('/api/refund-payment', {
                                                 method: 'POST',
@@ -1215,6 +1360,7 @@
                                             });
                                             const refundData = await refundRes.json();
 
+                                            // Pop up high-visibility instant refund modal with live Refund ID
                                             showRefundModal({
                                                 eventTitle: event.title,
                                                 amount: price,
@@ -1233,7 +1379,7 @@
                                             });
                                         }
 
-                                        // Mark event as Sold Out in UI
+                                        // Mark event as Sold Out in the UI immediately
                                         btn.disabled = true;
                                         btn.textContent = 'Sold Out';
                                         btn.className = 'bg-gray-400 text-white font-black py-3 px-10 rounded-full cursor-not-allowed shadow-none';
@@ -1288,12 +1434,17 @@
                 }
             });
 
-            // Reviews Logic
+            // =========================================================================
+            // VERIFIED ATTENDEE REVIEWS & 5-STAR RATING SYSTEM
+            // =========================================================================
+            // Stores the star rating selected by the student (1 to 5)
             let currentSelectedRating = 0;
 
+            // Interactive Star Rating Selector
             document.querySelectorAll('.star-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     currentSelectedRating = parseInt(e.target.getAttribute('data-val'));
+                    // Highlight stars up to selected value
                     document.querySelectorAll('.star-btn').forEach(b => {
                         if (parseInt(b.getAttribute('data-val')) <= currentSelectedRating) {
                             b.classList.remove('text-gray-300');
@@ -1307,6 +1458,7 @@
                 });
             });
 
+            // Review submission handler
             document.getElementById('post-review-btn').addEventListener('click', async () => {
                 if (currentSelectedRating === 0) return;
                 
@@ -1316,6 +1468,8 @@
                 btn.disabled = true;
                 btn.textContent = 'Submitting...';
                 
+                // Inserts into Supabase table 'event_reviews'
+                // A unique constraint (event_id, user_email) prevents duplicate ratings
                 const { error } = await supabase.from('event_reviews').insert([{
                     event_id: currentEventId,
                     user_email: userEmail,
@@ -1334,6 +1488,16 @@
                 }
             });
 
+            /**
+             * loadReviews:
+             * Fetches and displays all reviews for an event.
+             * 1. Calculates the arithmetic average rating and renders visual star breakdown.
+             * 2. Fraud prevention / Verified Attendee gate:
+             *    Only allows submitting a review if:
+             *      a) The student logged in with campus email.
+             *      b) The student's ticket has `is_scanned === true` (physical gate presence confirmed).
+             *      c) The student has not already reviewed this event.
+             */
             async function loadReviews(eventId) {
                 const list = document.getElementById('reviews-list');
                 const overviewContainer = document.getElementById('overall-rating-container');
@@ -1343,7 +1507,7 @@
                 overviewContainer.classList.add('hidden');
                 writeContainer.classList.add('hidden');
                 
-                // 1. Fetch reviews
+                // 1. Fetch reviews joined with student full name from 'profiles'
                 const { data: reviews, error } = await supabase
                     .from('event_reviews')
                     .select('*, profiles(full_name)')
@@ -1355,11 +1519,11 @@
                     return;
                 }
                 
-                // 2. Check if user can review
+                // 2. Attendance Gatekeeper Check: Ensure student physically attended before allowing review
                 if (userEmail) {
                     const hasReviewed = reviews.some(r => r.user_email === userEmail);
                     if (!hasReviewed) {
-                        // Check if they have a SCANNED ticket
+                        // Check if they have a SCANNED ticket for this specific event
                         const { data: tkt } = await supabase.from('tickets')
                             .select('is_scanned')
                             .eq('event_id', eventId)
@@ -1392,12 +1556,12 @@
                     return;
                 }
                 
-                // Calculate average rating
+                // 3. Compute arithmetic average rating (e.g. 4.8 / 5.0)
                 const avg = (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1);
                 document.getElementById('overall-rating-score').textContent = avg;
                 document.getElementById('overall-rating-count').textContent = `${reviews.length} Review${reviews.length > 1 ? 's' : ''}`;
                 
-                // Render stars for average
+                // Render visual stars for average score
                 let avgStars = '';
                 for (let i = 1; i <= 5; i++) {
                     if (i <= Math.round(avg)) avgStars += '★';
@@ -1406,6 +1570,7 @@
                 document.getElementById('overall-rating-stars').textContent = avgStars;
                 overviewContainer.classList.remove('hidden');
                 
+                // 4. Render individual review cards
                 list.innerHTML = '';
                 reviews.forEach(r => {
                     const name = r.profiles?.full_name || r.user_email.split('@')[0];
@@ -1433,6 +1598,7 @@
                     list.appendChild(li);
                 });
 
+                // Delete review listener (for author or super_admin)
                 list.querySelectorAll('.delete-rev-btn').forEach(btn => {
                     btn.addEventListener('click', async (e) => {
                         if (confirm('Delete this review?')) {
@@ -1444,6 +1610,7 @@
                 });
             }
 
+            // Initial feed load on page start
             fetchEvents();
         });
     </script>

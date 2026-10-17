@@ -35,29 +35,64 @@
     <style> body { visibility: hidden; } </style>
 </head>
 <body class="theme-bg-base min-h-screen theme-text-main transition-colors duration-300">
-    <!-- Navbar -->
+    <!-- Navbar (Responsive Desktop & Mobile) -->
     <nav class="theme-nav-glass backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.02)] border-b theme-border sticky top-0 z-50 transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
+                    <!-- Brand Logo -->
                     <h1 class="text-2xl font-black text-theme-accent tracking-tighter cursor-pointer hover:scale-105 transition-transform" onclick="window.location.href='index.html'">EVENTS</h1>
+                    <!-- Desktop Navigation Links (Visible on screens >= 768px) -->
                     <div class="hidden md:flex space-x-4">
                         <a href="index.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">Home</a>
                         <a href="wallet.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">My Wallet</a>
                         <a href="history.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">History</a>
                         <a href="admin.html" class="admin-link text-red-600 hover:text-red-800 font-bold px-3 py-2 hidden transition-colors">Admin Portal</a>
-                        <a href="scanner.html" id="nav-scanner" class="hidden text-green-600 hover:text-green-800 font-bold px-3 py-2 transition-colors">Scanner Mode</a>
+                        <a href="scanner.html" id="nav-scanner" class="nav-scanner-link hidden text-green-600 hover:text-green-800 font-bold px-3 py-2 transition-colors">Scanner Mode</a>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <!-- Theme Switcher -->
+                <!-- Right Action Bar: Theme Switcher, Email Display, Logout & Mobile Hamburger Toggle -->
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <!-- Theme Switcher (Light / Dark) -->
                     <select id="theme-selector" class="theme-bg-surface theme-text-main theme-border border rounded-lg text-sm px-2 py-1 font-medium focus:outline-none focus:ring-2 focus:ring-theme-accent cursor-pointer">
                         <option value="light">&#x2600;&#xFE0F; Light</option>
                         <option value="dark">&#x1F319; Dark</option>
                     </select>
 
                     <span id="user-email-display" class="text-sm theme-text-muted hidden md:block font-medium"></span>
-                    <button id="logout-btn" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm font-bold transition-colors">Log Out</button>
+                    <button id="logout-btn" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold transition-colors">Log Out</button>
+
+                    <!-- Mobile Hamburger Button (Visible on phones < 768px) -->
+                    <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl border theme-border theme-text-main hover:theme-bg-surface focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" aria-label="Toggle Navigation Menu">
+                        <svg id="hamburger-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        <svg id="close-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation Dropdown Menu -->
+            <div id="mobile-menu" class="hidden md:hidden border-t theme-border py-3 px-2 space-y-1.5 theme-bg-surface rounded-b-2xl shadow-xl">
+                <a href="index.html" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium theme-text-muted hover:theme-text-main hover:theme-bg-base transition-colors">
+                    <span class="text-base">🏠</span> Home Feed
+                </a>
+                <a href="wallet.html" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium theme-text-muted hover:theme-text-main hover:theme-bg-base transition-colors">
+                    <span class="text-base">🎟️</span> My Ticket Wallet
+                </a>
+                <a href="history.html" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium theme-text-muted hover:theme-text-main hover:theme-bg-base transition-colors">
+                    <span class="text-base">📜</span> Event History
+                </a>
+                <a href="admin.html" class="admin-link flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold text-red-600 bg-red-50 dark:bg-red-950/40">
+                    <span class="text-base">⚡</span> Admin & Organizer Portal
+                </a>
+                <a href="scanner.html" class="nav-scanner-link hidden flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold text-green-600 hover:bg-green-50 dark:hover:bg-green-950/30 transition-colors">
+                    <span class="text-base">📷</span> Gatekeeper Scanner
+                </a>
+                <div class="pt-2 border-t theme-border mt-2 px-3">
+                    <span class="user-email-mobile text-xs theme-text-muted block truncate font-mono"></span>
                 </div>
             </div>
         </div>
@@ -320,43 +355,52 @@
             currentUserEmail = session.user.email;
             if(document.getElementById('user-email-display')) document.getElementById('user-email-display').textContent = currentUserEmail;
 
-            // Fetch Role
+            // =========================================================================
+            // ROLE-BASED ACCESS CONTROL (RBAC) & SESSION VERIFICATION
+            // =========================================================================
+            // Fetch logged-in user's role from Supabase 'profiles'
             const { data: profile } = await supabase.from('profiles').select('role').eq('email', currentUserEmail).single();
             if (profile) currentUserRole = profile.role;
 
-            // Gatekeeping Access
+            // Security Gate: Block regular students from viewing the admin dashboard
             if (currentUserRole === 'student') {
                 document.getElementById('access-denied').classList.remove('hidden');
                 document.body.style.visibility = 'visible';
                 return;
             }
+            // Gatekeepers only have scanner permissions; redirect them directly to camera scanner
             if (currentUserRole === 'gatekeeper') {
-                // Gatekeepers should only see scanner
                 window.location.href = 'scanner.html';
                 return;
             }
 
-            // Allow access (Admin or Organizer)
+            // Grant access: User is either 'super_admin' or 'organizer'
             document.getElementById('dashboard-content').classList.remove('hidden');
             if (document.getElementById('nav-scanner')) { document.getElementById('nav-scanner').classList.remove('hidden'); }
             document.body.style.visibility = 'visible';
 
+            // Role Management tab visibility:
+            // Super Admins can promote any user to organizer or super_admin.
+            // Organizers can assign gatekeepers, but cannot promote other users to organizer.
             if (currentUserRole === 'super_admin' || currentUserRole === 'organizer') {
                 document.getElementById('tab-roles').classList.remove('hidden');
                 
-                // If they are just an organizer, restrict them from making other organizers
                 if (currentUserRole === 'organizer') {
                     const orgOption = document.querySelector('#role-select option[value="organizer"]');
                     if (orgOption) orgOption.remove();
                 }
             } else {
-                // Physically remove the role management tab for students/gatekeepers
                 const tabRoles = document.getElementById('tab-roles');
                 const viewRoles = document.getElementById('view-roles');
                 if (tabRoles) tabRoles.remove();
                 if (viewRoles) viewRoles.remove();
             }
 
+            /**
+             * loadNotices:
+             * Fetches and displays active broadcast notices for an event.
+             * Organizers can delete their notices in real-time.
+             */
             async function loadNotices(eventId) {
                 const list = document.getElementById('active-notices-list');
                 list.innerHTML = '<li class="theme-text-muted text-xs italic">Loading notices...</li>';
@@ -395,7 +439,9 @@
                 });
             }
 
-            // --- Tab Switching Logic ---
+            // =========================================================================
+            // SINGLE PAGE TAB ROUTER
+            // =========================================================================
             const tabs = {
                 events: { btn: document.getElementById('tab-events'), view: document.getElementById('view-events') },
                 create: { btn: document.getElementById('tab-create'), view: document.getElementById('view-create') },
@@ -404,14 +450,14 @@
             };
 
             function switchTab(activeTabId) {
-                // Hide all views, reset all buttons
+                // Hide all views, reset all navigation buttons
                 Object.keys(tabs).forEach(key => {
                     if(tabs[key].view) tabs[key].view.classList.add('hidden');
                     if(tabs[key].btn) {
                         tabs[key].btn.className = 'border-b-2 border-transparent theme-text-muted hover:theme-text-main font-medium pb-3 px-1 whitespace-nowrap';
                     }
                 });
-                // Activate target
+                // Activate target tab
                 if (activeTabId !== 'manage') {
                     tabs[activeTabId].btn.className = 'border-b-2 border-blue-600 text-blue-600 font-semibold pb-3 px-1 whitespace-nowrap';
                 }
@@ -425,10 +471,15 @@
             if (tabs.roles.btn) tabs.roles.btn.addEventListener('click', () => switchTab('roles'));
             document.getElementById('btn-back').addEventListener('click', () => switchTab('events'));
 
-            // Chart instances
+            // Chart.js instances for dynamic re-rendering
             let chartGender, chartBranch, chartBatch;
 
-            // --- View: Events ---
+            /**
+             * fetchEvents:
+             * Queries events for the admin portal:
+             * - Super Admins: Queries all campus events and joins organizer profile names.
+             * - Organizers: Filtered to only show events created by their email.
+             */
             async function fetchEvents() {
                 let query = supabase.from('events').select('*').order('created_at', { ascending: false });
                 if (currentUserRole !== 'super_admin') {
@@ -438,7 +489,7 @@
                 const { data: events, error } = await query;
                 if (error) { console.error(error); return; }
 
-                // Fetch Organizers if Super Admin
+                // Super Admin: Retrieve organizer names from profiles
                 let orgMap = {};
                 if (currentUserRole === 'super_admin' && events.length > 0) {
                     const emails = [...new Set(events.map(e => e.organizer_email))];
@@ -483,7 +534,21 @@
                 });
             }
 
-            // --- View: Manage Event (Attendees & Analytics) ---
+            // =========================================================================
+            // EVENT MANAGEMENT CONSOLE (ATTENDEES, GATEKEEPERS & ANALYTICS)
+            // =========================================================================
+            /**
+             * openManageEvent:
+             * Opens the detailed backend dashboard for a selected event.
+             * Features:
+             * 1. Mode Switcher:
+             *    - 'Donations': Queries `event_donations`, calculates total collected vs financial goal,
+             *      and lists donor names, batch, branch, and contribution amounts.
+             *    - Standard Event: Queries `tickets`, joins `profiles`, lists attendance status (Scanned vs Pending).
+             * 2. Gatekeeper Delegation: Assigns trusted volunteers to scan tickets at the door via `assign_event_gatekeeper` RPC.
+             * 3. Demographic Analytics: Visualizes gender, branch, and graduating batch distributions via Chart.js.
+             * 4. Notice Board Broadcast: Allows organizers to post live updates directly to students.
+             */
             async function openManageEvent(event) {
                 switchTab('manage');
                 document.getElementById('manage-title').textContent = event.title + (event.category === 'Donations' ? ' 🤝 (Donations)' : '');
@@ -499,6 +564,9 @@
                 loading.classList.remove('hidden');
                 analyticsPanel.classList.add('hidden');
 
+                // ---------------------------------------------------------------------
+                // BRANCH A: CROWDFUNDING & DONATION CAMPAIGN ANALYTICS
+                // ---------------------------------------------------------------------
                 if (event.category === 'Donations') {
                     try {
                         const { data: donations, error: dErr } = await supabase
@@ -518,6 +586,7 @@
                             return;
                         }
 
+                        // Join donor profiles
                         const emails = [...new Set(donations.map(d => d.student_email))];
                         const { data: profiles } = await supabase.from('profiles').select('*').in('email', emails);
                         const profileMap = {};
@@ -526,6 +595,7 @@
                         loading.classList.add('hidden');
                         analyticsPanel.classList.remove('hidden');
 
+                        // Demographic aggregation accumulators
                         const genders = { Male: 0, Female: 0, Other: 0, 'N/A': 0 };
                         const branches = { CSE: 0, ECE: 0, DSAI: 0, 'N/A': 0 };
                         const batches = {};
@@ -559,9 +629,10 @@
                             tbody.appendChild(tr);
                         });
 
+                        // Render Chart.js Demographics for donors
                         renderCharts(genders, branches, batches);
 
-                        // Setup Notices
+                        // Broadcast Notice Posting
                         loadNotices(event.id);
                         const noticeForm = document.getElementById('post-notice-form');
                         const newNoticeForm = noticeForm.cloneNode(true);
@@ -589,6 +660,9 @@
                     }
                 }
 
+                // ---------------------------------------------------------------------
+                // BRANCH B: STANDARD EVENT TICKET ROSTER & ATTENDANCE TRACKER
+                // ---------------------------------------------------------------------
                 document.getElementById('manage-stats').textContent = `${event.tickets_sold} Booked / ${event.total_capacity} Capacity`;
 
                 try {
@@ -615,7 +689,7 @@
                     const branches = { CSE: 0, ECE: 0, DSAI: 0, 'N/A': 0 };
                     const batches = {};
 
-                    // Store for export
+                    // Prepare attendee dataset for CSV export
                     currentEventIdForExport = event.title;
                     currentAttendeesData = tickets.map(t => {
                         const p = profileMap[t.student_email] || {};
@@ -635,7 +709,9 @@
                         };
                     });
 
-                    // Fetch assigned gatekeepers
+                    // =================================================================
+                    // GATEKEEPER ACCESS DELEGATION
+                    // =================================================================
                     const gkList = document.getElementById('assigned-gk-list');
                     gkList.innerHTML = '';
                     const { data: gks } = await supabase.from('event_gatekeepers').select('gatekeeper_email').eq('event_id', event.id);
@@ -647,7 +723,7 @@
                             gkList.appendChild(li);
                         });
 
-                        // Attach revoke listeners
+                        // Revoke gatekeeper access listener
                         gkList.querySelectorAll('.revoke-btn').forEach(btn => {
                             btn.addEventListener('click', async (e) => {
                                 const targetEmail = e.target.getAttribute('data-email');
@@ -662,7 +738,7 @@
                         gkList.innerHTML = '<li class="theme-text-muted italic text-sm">No gatekeepers assigned.</li>';
                     }
 
-                    // Setup Notices
+                    // Notices Posting Form setup
                     loadNotices(event.id);
                     const noticeForm = document.getElementById('post-notice-form');
                     const newNoticeForm = noticeForm.cloneNode(true);
@@ -685,9 +761,10 @@
                         }
                     });
 
-                    // Setup GK Assign Form
+                    // Assign Gatekeeper Form:
+                    // Calls Postgres stored procedure `assign_event_gatekeeper` which executes security-definer
+                    // role elevation, ensuring organizers can delegate gate check-in without exposing global role editing.
                     const gkForm = document.getElementById('assign-gk-form');
-                    // clone node to remove old listeners
                     const newGkForm = gkForm.cloneNode(true);
                     gkForm.parentNode.replaceChild(newGkForm, gkForm);
                     
@@ -695,8 +772,6 @@
                         e.preventDefault();
                         const email = document.getElementById('gk-email').value.trim();
                         
-                        // We use an RPC here so the database can safely upgrade the student to a gatekeeper 
-                        // and assign them to the event simultaneously, bypassing RLS restrictions.
                         const { error } = await supabase.rpc('assign_event_gatekeeper', { 
                             p_event_id: event.id, 
                             p_email: email 
@@ -706,11 +781,11 @@
                             alert(`Error: ${error.message}`);
                         } else {
                             document.getElementById('gk-email').value = '';
-                            openManageEvent(event); // reload the view
+                            openManageEvent(event); // Reload view with new gatekeeper
                         }
                     });
 
-                    // Render table
+                    // Render Attendees Table
                     currentAttendeesData.forEach(row => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
@@ -726,7 +801,7 @@
                         tbody.appendChild(tr);
                     });
 
-                    // Render Charts
+                    // Render Chart.js Demographic Breakdown
                     renderCharts(genders, branches, batches);
 
                 } catch (err) {
@@ -735,14 +810,22 @@
                 }
             }
 
+            /**
+             * renderCharts:
+             * Visualizes event audience demographics via Chart.js:
+             * - Gender distribution (Pie Chart)
+             * - Engineering branch breakdown (Doughnut Chart: CSE, ECE, DSAI)
+             * - Academic batch / graduation year (Bar Chart)
+             */
             function renderCharts(genders, branches, batches) {
-                // Destroy old charts if switching events
+                // Destroy stale canvas contexts when switching between different events
                 if (chartGender) chartGender.destroy();
                 if (chartBranch) chartBranch.destroy();
                 if (chartBatch) chartBatch.destroy();
 
                 const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } };
 
+                // Gender Pie Chart
                 chartGender = new Chart(document.getElementById('chart-gender'), {
                     type: 'pie',
                     data: {
@@ -752,6 +835,7 @@
                     options: commonOptions
                 });
 
+                // Academic Branch Doughnut Chart
                 chartBranch = new Chart(document.getElementById('chart-branch'), {
                     type: 'doughnut',
                     data: {
@@ -761,6 +845,7 @@
                     options: commonOptions
                 });
 
+                // Academic Batch Bar Chart
                 chartBatch = new Chart(document.getElementById('chart-batch'), {
                     type: 'bar',
                     data: {
@@ -771,7 +856,10 @@
                 });
             }
 
-            // --- CSV Export Logic ---
+            // =========================================================================
+            // CSV DATA EXPORT ENGINE
+            // =========================================================================
+            // Generates and triggers instant browser download of attendee or donor lists in standard CSV format
             document.getElementById('btn-export-csv').addEventListener('click', () => {
                 if (currentAttendeesData.length === 0) return alert('No data to export.');
                 
@@ -780,7 +868,7 @@
                     ? "Name,Email,Batch,Branch,Gender,Amount,Date\n"
                     : "Name,Email,Batch,Branch,Gender,Status\n";
                 
-                // Rows
+                // Format rows with escaped quotation marks
                 currentAttendeesData.forEach(row => {
                     if (isDonationExport) {
                         csvContent += `"${row.name}","${row.email}","${row.batch}","${row.branch}","${row.gender}","₹${row.amount}","${row.date}"\n`;
@@ -790,7 +878,7 @@
                     }
                 });
 
-                // Download
+                // Trigger client-side file download via Blob and Object URL
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
@@ -801,7 +889,9 @@
                 document.body.removeChild(link);
             });
 
-            // --- View: Create Event Logic ---
+            // =========================================================================
+            // EVENT PUBLISHING (SUPABASE STORAGE & DATABASE INSERTION)
+            // =========================================================================
             document.getElementById('create-event-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const btn = document.getElementById('submit-btn');
@@ -810,6 +900,7 @@
                 let finalPosterUrl = null;
                 const fileInput = document.getElementById('poster_file');
                 
+                // Upload custom poster file to Supabase Storage Bucket 'posters' if selected
                 if (fileInput.files.length > 0) {
                     const file = fileInput.files[0];
                     const fileExt = file.name.split('.').pop();
@@ -827,6 +918,7 @@
                     finalPosterUrl = publicUrlData.publicUrl;
                 }
 
+                // Construct event payload
                 const newEvent = {
                     title: document.getElementById('title').value,
                     category: document.getElementById('category').value,
@@ -842,18 +934,21 @@
                     scan_start_minutes_before: parseInt(document.getElementById('scan_buffer').value) || 120
                 };
 
+                // Insert into Supabase table 'events'
                 const { error } = await supabase.from('events').insert([newEvent]);
                 if (error) {
                     showNotif('Failed to create event. Check permissions.', 'error');
                 } else {
                     showNotif('Event successfully published!');
                     e.target.reset();
-                    switchTab('events'); // go back to events feed
+                    switchTab('events'); // Return to events feed
                 }
                 btn.disabled = false; btn.textContent = 'Publish Event';
             });
 
-            // --- View: Role Management Logic ---
+            // =========================================================================
+            // ROLE MANAGEMENT (PRIVILEGE ELEVATION)
+            // =========================================================================
             const roleForm = document.getElementById('role-form');
             if (roleForm) {
                 roleForm.addEventListener('submit', async (e) => {
@@ -861,7 +956,8 @@
                     const targetEmail = document.getElementById('role-email').value;
                     const newRole = document.getElementById('role-select').value;
                     
-                    // .select() forces Supabase to return the updated row. If RLS blocks it, data will be empty.
+                    // .select() forces Supabase to return the updated record.
+                    // If Postgres Row Level Security (RLS) blocks the update, returned data is empty.
                     const { data, error } = await supabase.from('profiles').update({ role: newRole }).eq('email', targetEmail).select();
                     
                     if (error || !data || data.length === 0) {
@@ -873,7 +969,10 @@
                 });
             }
 
-            // Category Adaptations for Donations
+            // =========================================================================
+            // FORM FIELD ADAPTATIONS FOR CROWDFUNDING & DONATIONS
+            // =========================================================================
+            // Relabels inputs dynamically when "Donations & Crowdfunding" category is selected
             const catSelect = document.getElementById('category');
             if (catSelect) {
                 catSelect.addEventListener('change', () => {
@@ -894,7 +993,7 @@
                 });
             }
 
-            // Initial load
+            // Initial load of events for the dashboard
             fetchEvents();
         });
     </script>

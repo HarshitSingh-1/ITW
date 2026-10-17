@@ -1,7 +1,22 @@
 /**
- * BookMyCollege - Official Certificate Generator
+ * =========================================================================
+ * BookMyCollege - Official Certificate Generation Engine
  * DSPM IIIT Naya Raipur
- * Generates high-resolution (1600x1130px) official participation certificates on HTML5 Canvas.
+ * =========================================================================
+ * ARCHITECTURE OVERVIEW:
+ * 1. Zero-Backend Overhead:
+ *    Instead of relying on heavy server-side PDF generators (Puppeteer/Headless Chrome),
+ *    the certificate is rendered entirely on the client side using standard HTML5 Canvas 2D.
+ * 2. High-DPI Print-Ready Resolution:
+ *    Canvas dimensions are set to 1600 x 1130 px (approximately 300 DPI at standard A4 landscape aspect).
+ * 3. Procedural Vector Art & Security Seal:
+ *    - Triple-layered security border (Deep Navy, Aztec Gold, Midnight Slate).
+ *    - Mathematical corner flourishes using 2D matrix transformations (`ctx.translate`, `ctx.scale`).
+ *    - Multi-stop linear gradients for textured parchment background.
+ *    - Vector-drawn DSPM IIIT-NR seal with ribbon tails and Bézier curve signature flourishes.
+ * 4. Dual Export Modes:
+ *    - `preview(data)`: Renders in-modal interactive preview with dark backdrop.
+ *    - `download(data)`: Generates high-res image/png Blob and triggers browser download.
  */
 
 (function (window) {

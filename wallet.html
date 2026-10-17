@@ -41,28 +41,60 @@
     </style>
 </head>
 <body class="theme-bg-base min-h-screen theme-text-main transition-colors duration-300">
-    <!-- Navbar -->
+    <!-- Navbar (Responsive Desktop & Mobile) -->
     <nav class="theme-nav-glass backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.02)] border-b theme-border sticky top-0 z-50 transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
+                    <!-- Brand Logo -->
                     <h1 class="text-2xl font-black text-theme-accent tracking-tighter cursor-pointer hover:scale-105 transition-transform" onclick="window.location.href='index.html'">EVENTS</h1>
+                    <!-- Desktop Navigation Links (Visible on screens >= 768px) -->
                     <div class="hidden md:flex space-x-4">
                         <a href="index.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">Home</a>
-                        <a href="wallet.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">My Wallet</a>
+                        <a href="wallet.html" class="text-theme-accent font-bold px-3 py-2">My Wallet</a>
                         <a href="history.html" class="theme-text-muted hover:text-theme-text font-medium px-3 py-2 transition-colors">History</a>
                         <a href="admin.html" class="admin-link text-red-600 hover:text-red-800 font-bold px-3 py-2 hidden transition-colors">Admin Portal</a>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <!-- Theme Switcher -->
+                <!-- Right Action Bar: Theme Switcher, Email Display, Logout & Mobile Hamburger Toggle -->
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <!-- Theme Switcher (Light / Dark) -->
                     <select id="theme-selector" class="theme-bg-surface theme-text-main theme-border border rounded-lg text-sm px-2 py-1 font-medium focus:outline-none focus:ring-2 focus:ring-theme-accent cursor-pointer">
                         <option value="light">&#x2600;&#xFE0F; Light</option>
                         <option value="dark">&#x1F319; Dark</option>
                     </select>
 
                     <span id="user-email-display" class="text-sm theme-text-muted hidden md:block font-medium"></span>
-                    <button id="logout-btn" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm font-bold transition-colors">Log Out</button>
+                    <button id="logout-btn" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold transition-colors">Log Out</button>
+
+                    <!-- Mobile Hamburger Button (Visible on phones < 768px) -->
+                    <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl border theme-border theme-text-main hover:theme-bg-surface focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" aria-label="Toggle Navigation Menu">
+                        <svg id="hamburger-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        <svg id="close-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation Dropdown Menu -->
+            <div id="mobile-menu" class="hidden md:hidden border-t theme-border py-3 px-2 space-y-1.5 theme-bg-surface rounded-b-2xl shadow-xl">
+                <a href="index.html" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium theme-text-muted hover:theme-text-main hover:theme-bg-base transition-colors">
+                    <span class="text-base">🏠</span> Home Feed
+                </a>
+                <a href="wallet.html" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40">
+                    <span class="text-base">🎟️</span> My Ticket Wallet
+                </a>
+                <a href="history.html" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium theme-text-muted hover:theme-text-main hover:theme-bg-base transition-colors">
+                    <span class="text-base">📜</span> Event History
+                </a>
+                <a href="admin.html" class="admin-link hidden flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                    <span class="text-base">⚡</span> Admin & Organizer Portal
+                </a>
+                <div class="pt-2 border-t theme-border mt-2 px-3">
+                    <span class="user-email-mobile text-xs theme-text-muted block truncate font-mono"></span>
                 </div>
             </div>
         </div>
@@ -108,12 +140,16 @@
             const noTicketsMsg = document.getElementById('no-tickets-msg');
             const emailDisplay = document.getElementById('user-email-display');
 
-            // Wait for session
+            // =========================================================================
+            // DIGITAL WALLET CONTROLLER
+            // =========================================================================
+            // Verify active Supabase user session
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) return; // app.js handles redirect
+            if (!session) return; // Handled by global auth guard in app.js
             const userEmail = session.user.email;
             if(emailDisplay) emailDisplay.textContent = userEmail;
 
+            // Fetch student's real full name from 'profiles' for personalized certificate generation
             let currentStudentName = userEmail.split('@')[0];
             try {
                 const { data: prof } = await supabase.from('profiles').select('full_name').eq('email', userEmail).single();
@@ -122,15 +158,22 @@
                 console.warn('Could not fetch student name:', pErr);
             }
 
+            /**
+             * fetchTickets:
+             * Queries the student's active event passes from PostgreSQL using Supabase.
+             * 1. Performs an inner join `events!inner(*)` ensuring tickets correspond to valid events.
+             * 2. Filters for upcoming events (event_date >= yesterday buffer).
+             * 3. Renders realistic perforated ticket cards with live QR codes.
+             * 4. Enables Google Calendar integration and Participation Certificate download.
+             */
             async function fetchTickets() {
                 try {
-                    // Fetch tickets joined with event data
-                    // Only fetch tickets where the event hasn't happened yet (or keep all and let history.html handle past ones)
-                    // For the wallet, usually you only want active ones. Let's fetch where event_date >= now.
                     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                    
+                    // Supabase Query: Relational Inner Join on tickets & events
                     const { data: tickets, error } = await supabase
                         .from('tickets')
-                        .select('*, events!inner(*)') // !inner ensures we only get tickets where the event exists
+                        .select('*, events!inner(*)') // !inner ensures orphaned tickets are discarded
                         .eq('student_email', userEmail)
                         .gte('events.event_date', yesterday)
                         .order('created_at', { ascending: false });
@@ -160,18 +203,22 @@
                             }
                         }
 
-                        // Google Calendar URL formatting
+                        // =====================================================================
+                        // GOOGLE CALENDAR DEEP LINK GENERATION
+                        // =====================================================================
+                        // Converts dates to Google Calendar template format (YYYYMMDDTHHMMSSZ)
                         function formatGCalDate(d) { return d.toISOString().replace(/-|:|\.\d\d\d/g, ""); }
                         const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${formatGCalDate(dateObj)}/${formatGCalDate(endDateObj)}&details=${encodeURIComponent(event.description || 'College Event')}&location=${encodeURIComponent(event.venue)}`;
 
                         const cardWrap = document.createElement('div');
                         cardWrap.className = 'flex flex-col gap-3';
                         
+                        // Perforated Ticket Card DOM
                         const card = document.createElement('div');
                         card.id = `ticket-card-${ticket.id}`;
                         card.className = 'theme-bg-surface rounded-[32px] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col relative transform transition-transform hover:-translate-y-2 duration-300';
                         
-                        // Scanned watermark/overlay
+                        // Scanned watermark overlay (Shown once gatekeeper scans the student in)
                         let scannedOverlay = '';
                         if (ticket.is_scanned) {
                             scannedOverlay = `
@@ -183,13 +230,13 @@
                             `;
                         }
 
-                        // Ticket ID (first 8 chars for aesthetics)
+                        // Ticket ID (first 8 characters for visual ticket stub)
                         const shortId = ticket.id.substring(0, 8).toUpperCase();
 
                         card.innerHTML = `
                             ${scannedOverlay}
                             
-                            <!-- Top Section -->
+                            <!-- Top Section: Event Banner & Date/Time/Venue -->
                             <div class="p-6 bg-gradient-to-br from-blue-600 to-blue-900 text-white relative flex-grow overflow-hidden">
                                 <div class="absolute -right-10 -top-10 w-32 h-32 theme-bg-surface/10 rounded-full blur-2xl"></div>
                                 <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-black/10 rounded-full blur-2xl"></div>
@@ -214,14 +261,14 @@
                                 </div>
                             </div>
                             
-                            <!-- Perforated separator -->
+                            <!-- Perforated separator with cut-out notches -->
                             <div class="relative theme-bg-surface h-8 flex items-center -my-4 z-20">
                                 <div class="w-8 h-8 theme-bg-base rounded-full absolute -left-4 shadow-inner"></div>
                                 <div class="w-8 h-8 theme-bg-base rounded-full absolute -right-4 shadow-inner"></div>
                                 <div class="w-full border-t-[3px] border-dashed theme-border mx-6"></div>
                             </div>
 
-                            <!-- Bottom section (QR Code) -->
+                            <!-- Bottom section: High-Resolution Scannable QR Code -->
                             <div class="p-6 theme-bg-surface text-center flex flex-col items-center">
                                 <p class="text-xs theme-text-muted mb-4 font-mono">TICKET #${shortId}</p>
                                 
@@ -232,7 +279,10 @@
                             </div>
                         `;
 
-                        // Action Buttons
+                        // =====================================================================
+                        // CONDITIONAL CERTIFICATE OF PARTICIPATION
+                        // =====================================================================
+                        // Unlocked only if event offered certificates AND student physically checked in (is_scanned)
                         let certBtnHtml = '';
                         if (event.has_certificate && ticket.is_scanned) {
                             certBtnHtml = `
@@ -242,6 +292,7 @@
                             `;
                         }
 
+                        // Auxiliary Action Buttons: Google Calendar sync & PNG card download
                         const actions = document.createElement('div');
                         actions.className = 'grid grid-cols-2 gap-2 mt-1';
                         actions.innerHTML = `
@@ -260,7 +311,7 @@
                         cardWrap.appendChild(actions);
                         ticketsGrid.appendChild(cardWrap);
 
-                        // Certificate Button Listener
+                        // Certificate Modal Trigger
                         const certBtn = document.getElementById(`cert-${ticket.id}`);
                         if (certBtn) {
                             certBtn.onclick = () => {
@@ -276,7 +327,7 @@
                             };
                         }
 
-                        // Generate QR Code inside the specific container
+                        // Generate cryptographic QR code for gatekeeper verification
                         if (!ticket.is_scanned) {
                             new QRCode(document.getElementById(`qr-${ticket.id}`), {
                                 text: ticket.qr_code_string,
@@ -288,10 +339,10 @@
                             });
                         }
 
-                        // Download Logic
+                        // Client-side Ticket PNG Download via html2canvas (2x Retina resolution)
                         document.getElementById(`download-${ticket.id}`).addEventListener('click', () => {
                             html2canvas(document.getElementById(`ticket-card-${ticket.id}`), {
-                                scale: 2, // High resolution
+                                scale: 2, // Crisp 2x retina export
                                 backgroundColor: null
                             }).then(canvas => {
                                 const link = document.createElement('a');
@@ -309,6 +360,7 @@
                 }
             }
 
+            // Initial load
             fetchTickets();
         });
     </script>
