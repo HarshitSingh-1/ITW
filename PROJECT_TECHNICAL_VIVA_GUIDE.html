@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Campus Event & Crowdfunding Platform — Technical Architecture & Viva Guide</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 14mm 14mm 14mm;
+    }
+    
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.5;
+      color: #1e293b;
+      background-color: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .cover-page {
+      padding: 40px 20px 20px 20px;
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 90vh;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      background: #4f46e5;
+      color: #ffffff;
+      padding: 6px 14px;
+      font-size: 10pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-radius: 9999px;
+      margin-bottom: 24px;
+    }
+
+    .cover-title {
+      font-size: 28pt;
+      font-weight: 800;
+      line-height: 1.2;
+      color: #0f172a;
+      margin: 0 0 16px 0;
+    }
+
+    .cover-subtitle {
+      font-size: 14pt;
+      color: #475569;
+      margin: 0 0 32px 0;
+      line-height: 1.4;
+    }
+
+    .meta-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      font-size: 10pt;
+    }
+
+    .meta-item strong {
+      color: #0f172a;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .toc {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+
+    .toc h3 {
+      margin-top: 0;
+      margin-bottom: 14px;
+      font-size: 13pt;
+      color: #0f172a;
+    }
+
+    .toc ul {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 10pt;
+      line-height: 1.8;
+      color: #334155;
+    }
+
+    .section-header {
+      border-bottom: 2px solid #4f46e5;
+      padding-bottom: 8px;
+      margin-top: 36px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      page-break-after: avoid;
+    }
+
+    .section-title {
+      font-size: 16pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+    }
+
+    .section-badge {
+      background: #e0e7ff;
+      color: #4338ca;
+      font-size: 9pt;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    h3 {
+      font-size: 12pt;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin: 0 0 10px 0;
+      color: #334155;
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin: 0 0 12px 0;
+      padding-left: 22px;
+      color: #334155;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+
+    .callout {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      border-radius: 0 8px 8px 0;
+      padding: 12px 16px;
+      margin: 14px 0;
+      page-break-inside: avoid;
+    }
+
+    .callout-title {
+      font-weight: 700;
+      color: #1d4ed8;
+      font-size: 10.5pt;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .viva-box {
+      background: #fdf4ff;
+      border-left: 4px solid #c026d3;
+      border-radius: 0 8px 8px 0;
+      padding: 12px 16px;
+      margin: 14px 0;
+      page-break-inside: avoid;
+    }
+
+    .viva-title {
+      font-weight: 700;
+      color: #a21caf;
+      font-size: 10.5pt;
+      margin-bottom: 4px;
+    }
+
+    .code-block {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 9pt;
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin: 12px 0;
+      overflow-x: auto;
+      page-break-inside: avoid;
+      line-height: 1.4;
+    }
+
+    .flow-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 14px 0;
+      page-break-inside: avoid;
+    }
+
+    .flow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 9.5pt;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .step-num {
+      background: #4f46e5;
+      color: #fff;
+      font-size: 8pt;
+      font-weight: 700;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 9.5pt;
+      page-break-inside: avoid;
+    }
+
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      text-align: left;
+    }
+
+    th {
+      background: #f1f5f9;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    .qa-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      page-break-inside: avoid;
+    }
+
+    .qa-q {
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+      font-size: 10.5pt;
+    }
+
+    .qa-a {
+      color: #334155;
+      font-size: 10pt;
+      line-height: 1.45;
+    }
+
+    .page-break {
+      page-break-after: always;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 8pt;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #475569;
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== COVER PAGE ==================== -->
+  <div class="cover-page">
+    <div>
+      <span class="cover-badge">Engineering Documentation & Viva Master Guide</span>
+      <h1 class="cover-title">Campus Event & Crowdfunding Platform</h1>
+      <p class="cover-subtitle">
+        A Full-Stack Distributed Platform featuring Atomic Concurrency, Cryptographic Verification, 
+        Real-Time Payment Settlement, Automated Instant Refunds & Zero-Backend Canvas Graphics.
+      </p>
+
+      <div class="meta-box">
+        <div class="meta-grid">
+          <div class="meta-item">
+            <strong>Architecture & Frontend:</strong>
+            Vanilla ES6+ JavaScript, Tailwind CSS, Single Page Router (SPA), WebRTC Media Stream API
+          </div>
+          <div class="meta-item">
+            <strong>Database & Auth:</strong>
+            Supabase (PostgreSQL 15), ACID Transactions, Row-Level Security (RLS), SECURITY DEFINER RPCs
+          </div>
+          <div class="meta-item">
+            <strong>Payments & Financials:</strong>
+            Razorpay Serverless Node.js APIs, Cryptographic HMAC-SHA256, Automated Instant Refund Engine
+          </div>
+          <div class="meta-item">
+            <strong>Visual Computing:</strong>
+            Client-Side HTML5 Canvas Vector Rasterization (300 DPI), QRCode.js, html2canvas, Chart.js
+          </div>
+        </div>
+      </div>
+
+      <div class="toc">
+        <h3>Document Table of Contents</h3>
+        <ul>
+          <li><strong>1. Core Client Framework (<code>app.js</code>):</strong> State Machine, Hydration & Navigation</li>
+          <li><strong>2. Main Portal (<code>index.html</code>):</strong> Concurrency Locks, Refunds, Crowd-funding & Review Gating</li>
+          <li><strong>3. User Ticket Vault (<code>wallet.html</code>):</strong> Perforated UI, UUID QR, Calendar Deep-links & Canvas</li>
+          <li><strong>4. Attendance & Archive Portal (<code>history.html</code>):</strong> Anti-Tamper Locks & Fill-Rate Metrics</li>
+          <li><strong>5. Organizer & Admin Dashboard (<code>admin.html</code>):</strong> Security Definer RPC, Analytics & CSV</li>
+          <li><strong>6. Gatekeeper Scanner (<code>scanner.html</code>):</strong> WebRTC Camera, Frame Mutex & 5-Step Pipeline</li>
+          <li><strong>7. Zero-Backend Certificate Engine (<code>certificate.js</code>):</strong> 300 DPI Canvas & Guilloche Math</li>
+          <li><strong>8. Serverless Payment & Refund APIs (<code>/api</code>):</strong> Order Init, HMAC Hash & Automated Refunds</li>
+          <li><strong>9. Comprehensive Viva Defense Q&A:</strong> Top 10 Technical Questions & Model Examiner Answers</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="font-size: 9pt; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between;">
+      <span>Department of Information Technology & Web Engineering</span>
+      <span>Production Deployment Guide</span>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 1 ==================== -->
+  <div class="section-header">
+    <h2 class="section-title">1. Core Application Framework: app.js</h2>
+    <span class="section-badge">Client Architecture</span>
+  </div>
+
+  <p>
+    <code>app.js</code> serves as the central orchestration nervous system of the entire client-side application. 
+    It is loaded globally across all five web interfaces (<code>index.html</code>, <code>wallet.html</code>, <code>history.html</code>, <code>admin.html</code>, <code>scanner.html</code>) 
+    to manage authentication lifecycles, user identities, theme preferences, and cross-device navigation.
+  </p>
+
+  <h3>A. Supabase Auth State Machine (<code>onAuthStateChange</code>)</h3>
+  <p>
+    Instead of relying on fragile manual cookie inspection or polling <code>localStorage</code> on interval loops, 
+    <code>app.js</code> subscribes to an asynchronous reactive event listener provided by the Supabase Client SDK.
+  </p>
+  <ul>
+    <li><strong>Reactive Lifecycle:</strong> Emits real-time state transitions: <code>SIGNED_IN</code>, <code>SIGNED_OUT</code>, <code>TOKEN_REFRESHED</code>, and <code>USER_UPDATED</code>.</li>
+    <li><strong>Zero-Reload State Transitions:</strong> When a user logs in or out in another tab, the current tab reacts instantly, invalidating cached credentials and updating navigation controls.</li>
+    <li><strong>Automated Profile Hydration:</strong> Upon receiving a valid JWT access token, it queries the PostgreSQL <code>profiles</code> table using <code>auth.uid()</code> to fetch student metadata (Full Name, College, Roll Number, Branch, and Access Role).</li>
+  </ul>
+
+  <h3>B. Persistent Theme Engine (Dark & Light Mode)</h3>
+  <p>
+    Provides seamless contrast switching without page flicker (FOIT). The engine reads cached settings from <code>localStorage.getItem('theme')</code> 
+    and checks the hardware device's OS preference via <code>window.matchMedia('(prefers-color-scheme: dark)')</code>. 
+    It dynamically attaches or strips the <code>.dark</code> class on <code>document.documentElement</code>, driving Tailwind CSS dark mode utilities across all templates.
+  </p>
+
+  <h3>C. Global Mobile Drawer Navigation Orchestration</h3>
+  <p>
+    Addresses mobile responsiveness where desktop headers (<code>hidden md:flex</code>) are constrained. 
+    <code>initMobileNavigation()</code> binds touch event listeners to <code>#mobile-menu-btn</code>, smoothly toggling the height and opacity of <code>#mobile-menu</code> 
+    while synchronizing the user's active session badge into <code>.user-email-mobile</code>.
+  </p>
+
+  <div class="viva-box">
+    <div class="viva-title">🎓 Key Viva Defense Point (app.js)</div>
+    <em>"We implemented an event-driven decoupled architecture. UI components never directly mutate user state; they react to auth events emitted by the Supabase client state machine. This guarantees zero state drift across tabs and views."</em>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- ==================== SECTION 2 ==================== -->
+  <div class="section-header">
+    <h2 class="section-title">2. Main Portal: index.html</h2>
+    <span class="section-badge">Discovery, Concurrency & Community</span>
+  </div>
+
+  <h3>A. Multi-Dimensional Client-Side Filtering Pipeline</h3>
+  <p>
+    To guarantee 0ms latency for students searching for events, all active events are queried once on page load and held in an in-memory collection (<code>allEvents</code>). 
+    As the student types into the search field or clicks category chips, a compound intersection filter executes client-side:
+  </p>
+  <div class="code-block">
+FilteredList = Events.filter(e => 
+  (e.title.includes(q) || e.desc.includes(q)) &&
+  (selectedCategory === 'all' || e.category === selectedCategory) &&
+  (selectedCollege === 'all' || e.college_name === selectedCollege) &&
+  (selectedPrice === 'free' ? e.price === 0 : true)
+);
+  </div>
+
+  <h3>B. Atomic Seat Booking via PostgreSQL RPC (Pessimistic Row Locks)</h3>
+  <p>
+    <strong>The Critical Flaw of Naive Systems:</strong> In high-demand college fests, 50 students simultaneously click "Book" for the last remaining seat. 
+    In basic web applications, 50 queries execute <code>SELECT available_seats</code>, find <code>1</code>, and write 50 tickets—causing catastrophic double booking.
+  </p>
+  <p>
+    <strong>Our Solution (ACID Guarantee):</strong> We developed an atomic Remote Procedure Call (RPC) in PostgreSQL named <code>book_ticket_safe</code>:
+  </p>
+  <div class="code-block">
+CREATE OR REPLACE FUNCTION book_ticket_safe(p_event_id UUID, p_user_id UUID)
+RETURNS JSON AS $$
+DECLARE v_seats INT;
+BEGIN
+  -- Place an exclusive pessimistic row-level lock on this specific event record
+  SELECT available_seats INTO v_seats FROM events WHERE id = p_event_id FOR UPDATE;
+  
+  IF v_seats <= 0 THEN
+    RETURN json_build_object('success', false, 'error', 'SOLD_OUT');
+  END IF;
+  
+  -- Decrement seat count and issue ticket in one atomic transaction
+  UPDATE events SET available_seats = available_seats - 1 WHERE id = p_event_id;
+  INSERT INTO tickets (event_id, user_id, is_scanned) VALUES (p_event_id, p_user_id, false);
+  
+  RETURN json_build_object('success', true);
+END;
+$$ LANGUAGE plpgsql;
+  </div>
+
+  <h3>C. Race Condition Detection & Instant Auto-Refund Modal</h3>
+  <div class="flow-card">
+    <div class="flow-steps">
+      <div class="step-item">
+        <span class="step-num">1</span>
+        <span>Student completes payment through Razorpay modal; bank debits money and returns Payment ID.</span>
+      </div>
+      <div class="step-item">
+        <span class="step-num">2</span>
+        <span>Client invokes <code>book_ticket_safe</code>. If another transaction took the final seat, RPC throws <code>'SOLD_OUT'</code>.</span>
+      </div>
+      <div class="step-item">
+        <span class="step-num">3</span>
+        <span>Client immediately fires <code>POST /api/refund-payment</code> with the captured Razorpay Payment ID.</span>
+      </div>
+      <div class="step-item">
+        <span class="step-num">4</span>
+        <span>Backend instructs Razorpay API to process an <strong>Optimum Speed Instant Refund</strong>.</span>
+      </div>
+      <div class="step-item">
+        <span class="step-num">5</span>
+        <span>The <code>#soldOutRefundModal</code> appears on screen, displaying transaction reference and refund confirmation.</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>D. Verified Attendee Review Gating</h3>
+  <p>
+    To eliminate trolling and fake feedback, ratings are strictly gated by proof of physical presence. 
+    The submission handler executes an inner join: <code>tickets.user_id = auth.uid() AND tickets.is_scanned = true</code>. 
+    Only attendees whose QR was physically verified at the gatekeeper checkpoint are authorized to submit star ratings and testimonials.
+  </p>
+
+  <h3>E. Nested Discussion Boards with Role-Based Access Control (RBAC)</h3>
+  <p>
+    Real-time Q&A threads linked to each event allow attendees to clarify logistics. 
+    Delete capabilities (<code>🗑️</code>) are restricted: only the original comment author (matching <code>auth.uid()</code>) or system administrators can delete comments, enforced at the database level by Row-Level Security (RLS) policies.
+  </p>
+
+  <h3>F. Crowdfunding Campaign Engine</h3>
+  <p>
+    Enables senior student bodies and collegiate clubs to raise funds for cultural festivals (Navratri, Farewell) or robotics competitions. 
+    Features real-time progress calculations ($\frac{\text{Current}}{\text{Target}} \times 100$), animated progress bars, and a dynamic modal accepting arbitrary contribution amounts directly into the Razorpay payment pipeline.
+  </p>
+
+  <div class="page-break"></div>
+
+  <!-- ==================== SECTION 3 ==================== -->
+  <div class="section-header">
+    <h2 class="section-title">3. User Ticket Vault: wallet.html</h2>
+    <span class="section-badge">Digital Passes & Export</span>
+  </div>
+
+  <h3>A. Perforated Stub UI Geometry</h3>
+  <p>
+    Renders tickets using visual metaphors from physical event stubs. 
+    Built with pure Tailwind CSS and CSS pseudo-elements: radial cutout gradients simulate round punch holes on the top and bottom borders, separated by a vertical dashed tear border (<code>border-dashed border-slate-700</code>).
+  </p>
+
+  <h3>B. Client-Side Cryptographic QR Generation</h3>
+  <p>
+    Using <code>QRCode.js</code>, tickets generate scannable 2D barcodes entirely inside the browser canvas. 
+    Crucially, the QR code encodes **only the immutable 128-bit UUID** of the ticket row. 
+    Because the payload contains no raw personal data, a student cannot forge a pass by modifying local HTML or images.
+  </p>
+
+  <h3>C. Zero-Dependency Google Calendar Integration</h3>
+  <p>
+    Formats RFC 5545-compliant URLs opening calendar software directly:
+  </p>
+  <div class="code-block">
+https://calendar.google.com/calendar/render?action=TEMPLATE
+  &text=Event+Title
+  &dates=20261025T043000Z/20261025T083000Z
+  &details=Hall+B+Workshop
+  &location=Main+Auditorium
+  </div>
+
+  <h3>D. Verified Attendance Badge & Certificate Unlocking</h3>
+  <p>
+    If <code>ticket.is_scanned === false</code>, the ticket reflects a <code>⏳ Pending Check-in</code> badge and the certificate button is disabled. 
+    Once checked in by the gatekeeper, the state switches to <code>✅ Verified Attendee</code>, dynamically lighting up the certificate download option.
+  </p>
+
+  <h3>E. High-Resolution DOM Rasterization via html2canvas</h3>
+  <p>
+    Enables students to save passes offline for network-dead venues (basements, auditoriums). 
+    <code>html2canvas</code> traverses the ticket card's DOM tree, compiles computed styles, renders at <code>scale: 2</code> (Retina DPI), and triggers a clean PNG download.
+  </p>
+
+  <!-- ==================== SECTION 4 ==================== -->
+  <div class="section-header">
+    <h2 class="section-title">4. Attendance & Archive Portal: history.html</h2>
+    <span class="section-badge">Audit & Verification</span>
+  </div>
+
+  <h3>A. Temporal Participation Classification (Attended vs Missed)</h3>
+  <p>
+    Past events (where <code>event_date &lt; NOW()</code>) are partitioned based on physical check-in status:
+  </p>
+  <ul>
+    <li><strong>Attended (Green Badge):</strong> The ticket was scanned at the gate (<code>is_scanned === true</code>). Full access to participation certificates is unlocked.</li>
+    <li><strong>Missed (Grey Badge):</strong> The seat was booked but the student was absent (<code>is_scanned === false</code>).</li>
+  </ul>
+
+  <h3>B. Anti-Tamper Certificate Lock</h3>
+  <p>
+    Events marked as <strong>Missed</strong> permanently lock the certificate trigger (<code>🔒 Certificate Locked - No Attendance Record</code>). 
+    This prevents students from claiming participation credentials or extra academic credits for events they skipped.
+  </p>
+
+  <h3>C. Organizer Post-Event Retrospective Analytics</h3>
+  <p>
+    For faculty coordinators and club leads, <code>history.html</code> renders aggregate yield metrics:
+  </p>
+  <div class="code-block">
+Turnout Rate (%)   = (Scanned Tickets / Total Tickets Sold) * 100
+Capacity Fill (%)  = (Total Tickets Sold / Total Event Capacity) * 100
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- ==================== SECTION 5 ==================== -->
+  <div class="section-header">
+    <h2 class="section-title">5. Organizer & Admin Dashboard: admin.html</h2>
+    <span class="section-badge">Management & RBAC</span>
+  </div>
+
+  <h3>A. Security-Definer Gatekeeper RPC (Privilege Minimization)</h3>
+  <p>
+    <strong>The Problem:</strong> Event organizers need student volunteers to scan tickets at entry doors. 
+    However, granting volunteers administrative privileges creates massive vulnerability (volunteers could alter prices, delete events, or view financial records).
+  </p>
+  <p>
+    <strong>The Solution:</strong> A PostgreSQL stored procedure declared with <code>SECURITY DEFINER</code>:
+  </p>
+  <div class="code-block">
+CREATE OR REPLACE FUNCTION assign_event_gatekeeper(p_event_id UUID, p_email TEXT)
+RETURNS JSON SECURITY DEFINER AS $$
+DECLARE v_target_user_id UUID;
+BEGIN
+  -- Lookup target user by email
+  SELECT id INTO v_target_user_id FROM auth.users WHERE email = p_email;
+  IF v_target_user_id IS NULL THEN
+    RETURN json_build_object('success', false, 'error', 'USER_NOT_FOUND');
+  END IF;
+  
+  -- Grant scanning authorization strictly scoped to this single event ID
+  INSERT INTO event_gatekeepers (event_id, user_id) 
+  VALUES (p_event_id, v_target_user_id)
+  ON CONFLICT DO NOTHING;
+  
+  RETURN json_build_object('success', true);
+END;
+$$ LANGUAGE plpgsql;
+  </div>
+
+  <h3>B. Demographic Visualizations via Chart.js</h3>
+  <p>
+    Executes relational joins across <code>tickets</code> and <code>profiles</code> to render real-time demographic breakdowns:
+  </p>
+  <ul>
+    <li><strong>Gender Ratio:</strong> Donut chart highlighting diversity metrics across attendees.</li>
+    <li><strong>Department / Branch:</strong> Vertical bar chart displaying registration distribution across Computer Science, Electronics, Mechanical, Civil, etc.</li>
+    <li><strong>Academic Year:</strong> Polar area chart tracking 1st through 4th-year student engagement.</li>
+  </ul>
+
+  <h3>C. Dual-Mode Sanitized CSV Exporter</h3>
+  <p>
+    Allows organizers to export verified attendance rosters. Features **CSV Formula Injection Sanitization**: 
+    any cell data beginning with potentially harmful spreadsheet calculation operators (<code>=</code>, <code>+</code>, <code>-</code>, <code>@</code>) 
+    is prepended with a single quote (<code>'</code>) to prevent Remote Code Execution in Microsoft Excel. Timestamps are formatted into Indian Standard Time (IST).
+  </p>
+
+  <h3>D. Supabase Storage Poster Pipeline</h3>
+  <p>
+    Handles raw image file streaming directly to the <code>event-posters</code> bucket via Supabase Storage API, returning a persistent public CDN URL saved to <code>events.image_url</code>.
+  </p>
+
+  <div class="page-break"></div>
+
+  <!-- ==================== SECTION 6 ==================== -->
+  <div class="section-header">
+    <h2 class="section-title">6. Gatekeeper Scanner: scanner.html</h2>
+    <span class="section-badge">Hardware Scanning & Concurrency</span>
+  </div>
+
+  <h3>A. WebRTC Rear Camera Feed Acquisition</h3>
+  <p>
+    Interacts with hardware optical sensors using standard WebRTC APIs:
+  </p>
+  <div class="code-block">
+navigator.mediaDevices.getUserMedia({
+  video: { facingMode: "environment", width: { ideal: 1280 } }
+});
+  </div>
+  <p>
+    The constraint <code>facingMode: "environment"</code> explicitly forces mobile browsers to activate the high-fidelity rear camera sensor instead of the front-facing webcam.
+  </p>
+
+  <h3>B. Frame Mutex Concurrency Lock (<code>isProcessing</code>)</h3>
+  <p>
+    The video stream decodes frames at 60 FPS using <code>requestAnimationFrame</code>. 
+    When an attendee holds a QR code before the lens, a naive loop would trigger 60 duplicate network requests within a single second. 
+    To prevent database flooding, an atomic boolean flag <code>isProcessing = true</code> locks the stream immediately upon first decode, 
+    discarding all subsequent frames until an asynchronous 2-second cooldown concludes.
+  </p>
+
+  <h3>C. 5-Step Verification & Validation Pipeline</h3>
+  <div class="flow-card">
+    <div class="flow-steps">
+      <div class="step-item">
+        <span class="step-num">1</span>
+        <span><strong>Regex UUID Validation:</strong> Verifies format <code>^[0-9a-f]{8}-[0-9a-f]{4}...$</code> before executing database queries.</span>
+      </div>
+      <div class="step-item">
+        <span class="step-num">2</span>
+        <span><strong>Authorization Check:</strong> Confirms the scanning user is registered as the Organizer or an assigned Gatekeeper.</span>
+      </div>
+      <div class="step-item">
+        <span class="step-num">3</span>
+        <span><strong>Duplicate Verification Gate:</strong> If <code>ticket.is_scanned === true</code>, plays an error tone and renders a RED alert: <em>"ALREADY USED at [Timestamp]"</em>.</span>
+      </div>
+      <div class="step-item">
+        <span class="step-num">4</span>
+        <span><strong>Atomic Mark Mutation:</strong> If unverified, updates <code>is_scanned = true, scanned_at = NOW()</code>.</span>
+      </div>
+      <div class="step-item">
+        <span class="step-num">5</span>
+        <span><strong>Audible & Visual Confirmation:</strong> Plays success chime, displays student name, roll number, and branch on screen.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 7 ==================== -->
+  <div class="section-header">
+    <h2 class="section-title">7. Zero-Backend Certificate Engine: certificate.js</h2>
+    <span class="section-badge">Vector Graphics & Mathematics</span>
+  </div>
+
+  <h3>A. Client-Side High-DPI Vector Rasterization</h3>
+  <p>
+    Traditional applications generate certificates on the server using headless browsers (Puppeteer), consuming excessive CPU/RAM and incurring cloud costs. 
+    Our engine creates an in-memory HTML5 <code>&lt;canvas&gt;</code> element dimensioned at <strong>1600 × 1130 pixels (~300 DPI print quality)</strong>. 
+    The browser renders the entire document locally in under <strong>80 milliseconds</strong>.
+  </p>
+
+  <h3>B. Procedural Mathematics & Anti-Counterfeiting</h3>
+  <ul>
+    <li><strong>Parametric Guilloche Rosette:</strong> Mathematical curves generated using polar trigonometry:
+      $$r = a \cdot \cos(k \cdot \theta)$$
+      Renders complex geometric security seals that cannot be easily replicated or altered.
+    </li>
+    <li><strong>Smooth Bézier Signatures:</strong> Uses cubic Bézier curves (<code>ctx.bezierCurveTo()</code>) to render lifelike digital signatures for authorizing officials.</li>
+    <li><strong>Cryptographic Verification Watermark:</strong> Embeds the Ticket UUID at the footer, allowing anyone to verify physical printed certificates against the online database.</li>
+  </ul>
+
+  <div class="page-break"></div>
+
+  <!-- ==================== SECTION 8 ==================== -->
+  <div class="section-header">
+    <h2 class="section-title">8. Serverless Payment & Refund APIs (/api)</h2>
+    <span class="section-badge">Financial Cryptography</span>
+  </div>
+
+  <h3>A. Order Initialization: <code>api/create-order.js</code></h3>
+  <p>
+    A Node.js serverless microservice deployed on Vercel. 
+    Its primary responsibility is <strong>API Secret Encapsulation</strong>: <code>RAZORPAY_KEY_SECRET</code> is stored in server-side environment variables and is never exposed to the client. 
+    Converts Indian Rupee amounts to smallest integer units (paise: ₹100 = 10,000 paise) and invokes <code>razorpay.orders.create()</code>.
+  </p>
+
+  <h3>B. Cryptographic Signature Verification: <code>api/verify-payment.js</code></h3>
+  <p>
+    <strong>The Threat:</strong> A client could tamper with JavaScript in DevTools and fake a success response without paying.
+  </p>
+  <p>
+    <strong>The Mathematical Proof:</strong> When Razorpay captures payment, it hashes the transaction data using the merchant's secret key:
+  </p>
+  <div class="code-block">
+const expectedSignature = crypto
+  .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+  .update(order_id + "|" + payment_id)
+  .digest('hex');
+
+if (expectedSignature === razorpay_signature) {
+  // Payment is mathematically authentic!
+}
+  </div>
+
+  <h3>C. Automated Instant Refund Pipeline: <code>api/refund-payment.js</code></h3>
+  <p>
+    If a ticket sells out during payment transit, this microservice executes an immediate refund via Razorpay's API:
+  </p>
+  <div class="code-block">
+POST https://api.razorpay.com/v1/payments/{payment_id}/refund
+Headers: { Authorization: "Basic [Base64(Key:Secret)]" }
+Body: { "speed": "optimum" }
+  </div>
+  <p>
+    Passing <code>"speed": "optimum"</code> guarantees instant reversal via UPI/IMPS rails directly back to the student's original payment method.
+  </p>
+
+  <!-- ==================== SECTION 9 ==================== -->
+  <div class="section-header">
+    <h2 class="section-title">9. Viva Defense & Technical Interview Master Q&A</h2>
+    <span class="section-badge">Examiner Cheat-Sheet</span>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">Q1: How does your system prevent two students from booking the last ticket simultaneously?</div>
+    <div class="qa-a">
+      <strong>Answer:</strong> We implemented a PostgreSQL stored procedure named <code>book_ticket_safe</code> that executes with <code>SELECT ... FOR UPDATE</code>. 
+      This places an exclusive pessimistic row lock on the event record during the transaction. 
+      Concurrent requests must wait in a queue; once the first request claims the ticket, subsequent transactions read <code>available_seats = 0</code>, abort immediately, and trigger our automated instant refund flow.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">Q2: Why not just store the student's name and event title in the QR code?</div>
+    <div class="qa-a">
+      <strong>Answer:</strong> Storing readable text in QR codes is insecure because anyone could generate a fraudulent QR with their name using a free generator. 
+      Instead, our system encodes only the cryptographically random 128-bit Ticket UUID. 
+      The scanner at the gate performs an authenticated database lookup against that UUID to confirm validity, gatekeeper authorization, and scan state.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">Q3: What happens if payment succeeds on the user's bank app but the seat is gone?</div>
+    <div class="qa-a">
+      <strong>Answer:</strong> We have an automated circuit-breaker refund engine. 
+      When the client catches the <code>'SOLD_OUT'</code> exception from the database RPC, it immediately dispatches the Razorpay Payment ID to <code>/api/refund-payment</code>. 
+      Our backend calls Razorpay's API with <code>speed: "optimum"</code>, reversing the funds instantly back to the student's UPI or card without requiring manual admin intervention.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">Q4: How do you prevent student volunteers from abusing their scanning access?</div>
+    <div class="qa-a">
+      <strong>Answer:</strong> We enforce the Principle of Least Privilege using a <code>SECURITY DEFINER</code> RPC named <code>assign_event_gatekeeper</code>. 
+      Volunteers are granted scoped access exclusively to read and update the <code>is_scanned</code> status for their assigned event ID. 
+      They have zero permissions to delete events, view student financial histories, or modify ticket counts.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">Q5: Why did you build certificate generation in client-side Canvas instead of a backend PDF library?</div>
+    <div class="qa-a">
+      <strong>Answer:</strong> Server-side PDF generators like Puppeteer launch headless Chrome instances on the server, consuming 150–300MB of RAM per document and creating massive CPU bottlenecks during large fests. 
+      Our client-side Canvas engine offloads all vector math, guilloche rosettes, and Bézier curves to the user's browser GPU, rendering a 300 DPI print-ready certificate in under 80 milliseconds with zero server cost.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">Q6: What stops an attacker from submitting a fake payment confirmation from browser console?</div>
+    <div class="qa-a">
+      <strong>Answer:</strong> The frontend never decides whether a payment is valid. 
+      Instead, the raw transaction payload is sent to our serverless endpoint <code>/api/verify-payment</code>. 
+      The server computes an HMAC-SHA256 signature using our private Razorpay Secret Key. 
+      If the generated hash doesn't match the signature provided by Razorpay character-for-character, the request is rejected as tampered.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">Q7: How do you protect against CSV Formula Injection when exporting attendee lists?</div>
+    <div class="qa-a">
+      <strong>Answer:</strong> In <code>admin.html</code>, our export function sanitizes all string values. 
+      If any user-inputted field (like student name or roll number) begins with formula trigger characters such as <code>=</code>, <code>+</code>, <code>-</code>, or <code>@</code>, we prepend an apostrophe (<code>'</code>). 
+      This ensures spreadsheet programs like Excel or Google Sheets treat the cell strictly as raw text rather than executing arbitrary macros.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">Q8: How does the camera scanner handle 60 frames per second without crashing the database?</div>
+    <div class="qa-a">
+      <strong>Answer:</strong> We implemented an asynchronous concurrency mutex lock using a boolean flag (<code>isProcessing</code>). 
+      The instant a valid QR payload is decoded, <code>isProcessing</code> is set to <code>true</code>. 
+      All subsequent video frames decoded by <code>requestAnimationFrame</code> are instantly discarded until the network verification completes and a 2-second debounce timer releases the lock.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">Q9: What is the architectural role of Row-Level Security (RLS) in your application?</div>
+    <div class="qa-a">
+      <strong>Answer:</strong> Supabase connects the client directly to PostgreSQL. 
+      Row-Level Security ensures that even if a student inspects our API keys or manipulates network requests, the PostgreSQL engine itself blocks unauthorized queries. 
+      For example, an attendee can only <code>SELECT</code> tickets where <code>tickets.user_id = auth.uid()</code>, preventing students from inspecting each other's tickets.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">Q10: How does the Crowdfunding module differ technically from standard event ticketing?</div>
+    <div class="qa-a">
+      <strong>Answer:</strong> Event ticketing operates on fixed-unit inventory with deterministic seat decrements. 
+      Crowdfunding operates on dynamic variable contributions without inventory limits. 
+      The donation modal allows contributors to inject variable financial amounts into the Razorpay order creation microservice, updating aggregate campaign progress metrics in real time.
+    </div>
+  </div>
+
+  <!-- Summary Table -->
+  <div style="margin-top: 24px;">
+    <h3>Full Platform Architecture Summary</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Module</th>
+          <th>File</th>
+          <th>Core Architectural Function</th>
+          <th>Security / Concurrency Measure</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Client Framework</strong></td>
+          <td><code>app.js</code></td>
+          <td>Auth State Machine, Hydration, Mobile Drawer</td>
+          <td>JWT Token Refresh & Profile Decoupling</td>
+        </tr>
+        <tr>
+          <td><strong>Discovery Portal</strong></td>
+          <td><code>index.html</code></td>
+          <td>Atomic Booking, Reviews, Crowdfunding</td>
+          <td><code>FOR UPDATE</code> Row Lock & Auto-Refund</td>
+        </tr>
+        <tr>
+          <td><strong>Ticket Vault</strong></td>
+          <td><code>wallet.html</code></td>
+          <td>Perforated Passes, QR Codes, Calendar</td>
+          <td>UUID QR Encoding & HTML5 Canvas Raster</td>
+        </tr>
+        <tr>
+          <td><strong>Archive Portal</strong></td>
+          <td><code>history.html</code></td>
+          <td>Attended/Missed Classification & Metrics</td>
+          <td>Anti-Tamper Certificate Lock</td>
+        </tr>
+        <tr>
+          <td><strong>Admin Dashboard</strong></td>
+          <td><code>admin.html</code></td>
+          <td>Volunteer Management, Chart.js, CSV</td>
+          <td><code>SECURITY DEFINER</code> & CSV Sanitization</td>
+        </tr>
+        <tr>
+          <td><strong>Hardware Scanner</strong></td>
+          <td><code>scanner.html</code></td>
+          <td>WebRTC Camera & Gate Check-in Pipeline</td>
+          <td>Frame Concurrency Mutex (<code>isProcessing</code>)</td>
+        </tr>
+        <tr>
+          <td><strong>Certificate Engine</strong></td>
+          <td><code>certificate.js</code></td>
+          <td>300 DPI Client-Side Vector Graphics</td>
+          <td>Parametric Guilloche Math & UUID Stamp</td>
+        </tr>
+        <tr>
+          <td><strong>Serverless APIs</strong></td>
+          <td><code>/api/*.js</code></td>
+          <td>Order Creation, HMAC Hash, Auto-Refunds</td>
+          <td>HMAC-SHA256 & Secret Key Encapsulation</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>
