@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IIITNR Events</title>
+    <title>BookMyCollege - Campus Events & Crowdfunding</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -62,7 +62,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
                     <!-- Brand Logo -->
-                    <h1 class="text-2xl font-black text-theme-accent tracking-tighter cursor-pointer hover:scale-105 transition-transform" onclick="window.location.reload()">EVENTS</h1>
+                    <h1 class="text-2xl font-black text-theme-accent tracking-tighter cursor-pointer hover:scale-105 transition-transform" onclick="window.location.reload()">BookMy<span class="text-indigo-600 dark:text-indigo-400">College</span></h1>
                     <!-- Desktop Navigation Links (Visible on tablets/desktops >= 768px) -->
                     <div class="hidden md:flex space-x-4">
                         <a href="index.html" class="text-theme-accent font-bold px-3 py-2">Home</a>
@@ -1174,7 +1174,7 @@
                             "key": "rzp_test_TlHHyvp8triN6e",
                             "amount": donAmt * 100, // Amount in paise
                             "currency": "INR",
-                            "name": "IIITNR Crowdfunding",
+                            "name": "BookMyCollege Crowdfunding",
                             "description": event.title,
                             "order_id": orderData.orderId,
                             "handler": async function (response) {
@@ -1321,7 +1321,7 @@
                             "key": "rzp_test_TlHHyvp8triN6e",
                             "amount": price * 100,
                             "currency": "INR",
-                            "name": "IIITNR Events",
+                            "name": "BookMyCollege Events",
                             "description": event.title,
                             "order_id": orderData.orderId,
                             "handler": async function (response) {
