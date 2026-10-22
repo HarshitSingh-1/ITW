@@ -599,6 +599,13 @@
                         trending.forEach(event => {
                             const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop';
                             const dateObj = new Date(event.event_date);
+                            let carouselDate = dateObj.toLocaleDateString('en-GB');
+                            if (event.event_end_date) {
+                                const eD = new Date(event.event_end_date);
+                                if (dateObj.toDateString() !== eD.toDateString()) {
+                                    carouselDate += ` - ${eD.toLocaleDateString('en-GB')}`;
+                                }
+                            }
                             
                             const slide = document.createElement('div');
                             slide.className = 'snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] h-64 md:h-80 rounded-3xl overflow-hidden relative cursor-pointer shadow-lg group';
@@ -610,7 +617,7 @@
                                 <div class="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md flex items-center gap-1 animate-pulse">🔥 Trending</div>
                                 <div class="absolute bottom-0 left-0 p-5 md:p-6 w-full">
                                     <h3 class="text-white font-black text-2xl md:text-3xl leading-tight mb-2 drop-shadow-md line-clamp-2">${event.title}</h3>
-                                    <p class="text-gray-200 text-xs md:text-sm font-medium">📅 ${dateObj.toLocaleDateString(undefined, {month:'short', day:'numeric'})} • 📍 ${event.venue}</p>
+                                    <p class="text-gray-200 text-xs md:text-sm font-medium">📅 ${carouselDate} • 📍 ${event.venue}</p>
                                 </div>
                             `;
                             heroTrack.appendChild(slide);
@@ -625,6 +632,14 @@
                     events.forEach(event => {
                         const dateObj = new Date(event.event_date);
                         const isSoldOut = event.tickets_sold >= event.total_capacity;
+                        const isStarted = event.category !== 'Donations' && new Date() >= dateObj;
+                        let dateFormatted = dateObj.toLocaleDateString('en-GB');
+                        if (event.event_end_date) {
+                            const eD = new Date(event.event_end_date);
+                            if (dateObj.toDateString() !== eD.toDateString()) {
+                                dateFormatted += ` - ${eD.toLocaleDateString('en-GB')}`;
+                            }
+                        }
                         const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop';
                         
                         const card = document.createElement('div');
@@ -645,14 +660,14 @@
                         card.innerHTML = `
                             <div class="aspect-[3/4] relative w-full overflow-hidden bg-gray-200">
                                 <img src="${imgUrl}" alt="${event.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                                ${isSoldOut ? '<div class="absolute top-2 right-2 bg-black/90 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded shadow-sm">SOLD OUT</div>' : certPill}
+                                ${isStarted ? '<div class="absolute top-2 right-2 bg-red-600/95 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded shadow-sm">STARTED</div>' : (isSoldOut ? '<div class="absolute top-2 right-2 bg-black/90 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded shadow-sm">SOLD OUT</div>' : certPill)}
                                 ${catPill}
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                                 <div class="absolute bottom-0 left-0 p-4 w-full">
                                     <h3 class="text-white font-black text-lg leading-tight line-clamp-2">${event.title}</h3>
                                     <p class="text-gray-300 text-xs font-medium mt-1 flex justify-between">
-                                        <span>${dateObj.toLocaleDateString('en-GB')} • ${event.venue}</span>
-                                        <span class="${event.category === 'Donations' ? 'text-amber-400 font-bold' : 'text-green-400'}">${event.category === 'Donations' ? '🤝 Open Contribution' : (event.price && event.price > 0 ? '₹' + event.price : 'Free')}</span>
+                                        <span>${dateFormatted} • ${event.venue}</span>
+                                        <span class="${event.category === 'Donations' ? 'text-amber-400 font-bold' : (isStarted ? 'text-red-400 font-bold' : 'text-green-400')}">${event.category === 'Donations' ? '🤝 Open Contribution' : (isStarted ? 'Closed' : (event.price && event.price > 0 ? '₹' + event.price : 'Free'))}</span>
                                     </p>
                                 </div>
                             </div>
@@ -696,9 +711,13 @@
                 document.getElementById('detail-hero-img').src = imgUrl;
                 document.getElementById('detail-title').textContent = event.title;
                 document.getElementById('sticky-title').textContent = event.title;
+                const isStarted = event.category !== 'Donations' && new Date() >= new Date(event.event_date);
                 
                 const priceEl = document.getElementById('sticky-price');
-                if (event.price && event.price > 0) {
+                if (isStarted) {
+                    priceEl.textContent = 'Bookings Closed';
+                    priceEl.className = 'text-xs text-red-500 font-bold';
+                } else if (event.price && event.price > 0) {
                     priceEl.textContent = '₹' + event.price;
                     priceEl.className = 'text-xs theme-text-main font-bold';
                 } else {
@@ -714,7 +733,7 @@
                     if (d.toDateString() === eD.toDateString()) {
                         timeStr += ` - ${eD.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
                     } else {
-                        timeStr += ` to ${eD.toLocaleDateString()} ${eD.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                        timeStr += ` to ${eD.toLocaleDateString('en-GB')} at ${eD.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
                     }
                 }
                 
@@ -806,12 +825,25 @@
 
                         if (existingTicket) {
                             btn.textContent = 'Already Booked';
+                        } else if (isStarted) {
+                            btn.textContent = 'Event Started (Closed)';
                         } else if (fillPercent >= 100) {
                             btn.textContent = 'Sold Out';
                         } else {
                             btn.disabled = false;
                             btn.textContent = event.price > 0 ? `Book Ticket (₹${event.price})` : 'Book Ticket';
                             btn.className = 'bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-10 rounded-full focus:outline-none transition-transform active:scale-95 shadow-lg';
+                        }
+                    } else {
+                        if (isStarted) {
+                            btn.textContent = 'Event Started (Closed)';
+                        } else if (fillPercent >= 100) {
+                            btn.textContent = 'Sold Out';
+                        } else {
+                            btn.disabled = false;
+                            btn.textContent = 'Sign In to Book';
+                            btn.className = 'bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-10 rounded-full focus:outline-none transition-transform active:scale-95 shadow-lg';
+                            btn.onclick = () => window.location.href = 'auth.html';
                         }
                     }
                 }
@@ -1140,6 +1172,12 @@
                 const event = eventsData.find(e => e.id === currentEventId);
                 if (!event || !userEmail) return;
 
+                // Guard check: Reject booking if event has already started (Donations exempt)
+                if (event.category !== 'Donations' && new Date() >= new Date(event.event_date)) {
+                    showNotification('Booking is closed because this event has already started.', 'error');
+                    return;
+                }
+
                 const btn = document.getElementById('book-btn');
 
                 // =========================================================================
@@ -1286,12 +1324,20 @@
                 };
 
                 try {
-                    // PRE-FLIGHT CHECK: Re-verify real-time availability from Supabase before opening payment
+                    // PRE-FLIGHT CHECK: Re-verify real-time availability and timing from Supabase before opening payment
                     const { data: latestEvt } = await supabase
                         .from('events')
-                        .select('total_capacity, tickets_sold')
+                        .select('total_capacity, tickets_sold, event_date, category')
                         .eq('id', event.id)
                         .single();
+
+                    if (latestEvt && latestEvt.category !== 'Donations' && new Date() >= new Date(latestEvt.event_date)) {
+                        showNotification('Booking closed! This event has already started.', 'error');
+                        btn.disabled = true;
+                        btn.textContent = 'Event Started (Closed)';
+                        btn.className = 'bg-gray-400 text-white font-black py-3 px-10 rounded-full cursor-not-allowed shadow-none';
+                        return;
+                    }
 
                     if (latestEvt && latestEvt.tickets_sold >= latestEvt.total_capacity) {
                         showNotification('Sorry, this event is already sold out!', 'error');

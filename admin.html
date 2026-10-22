@@ -508,6 +508,13 @@
                     const orgName = currentUserRole === 'super_admin' ? (orgMap[event.organizer_email] || event.organizer_email) : '';
                     const imgUrl = event.poster_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop';
                     const dateObj = new Date(event.event_date);
+                    let dateDisplay = dateObj.toLocaleDateString('en-GB');
+                    if (event.event_end_date) {
+                        const eD = new Date(event.event_end_date);
+                        if (dateObj.toDateString() !== eD.toDateString()) {
+                            dateDisplay += ` - ${eD.toLocaleDateString('en-GB')}`;
+                        }
+                    }
                     
                     const card = document.createElement('div');
                     card.className = 'theme-bg-surface rounded-xl shadow-sm border theme-border p-5 hover:shadow-md cursor-pointer transition-shadow flex flex-col h-full';
@@ -520,7 +527,7 @@
                         </div>
                         <h3 class="font-bold text-lg theme-text-main leading-tight mb-1 line-clamp-1">${event.title}</h3>
                         ${orgName ? `<p class="text-xs text-blue-600 font-semibold mb-2 line-clamp-1">By: ${orgName}</p>` : ''}
-                        <p class="text-sm theme-text-muted mb-2">📅 ${dateObj.toLocaleDateString('en-GB')} • 📍 ${event.venue || 'TBA'}</p>
+                        <p class="text-sm theme-text-muted mb-2">📅 ${dateDisplay} • 📍 ${event.venue || 'TBA'}</p>
                         <div class="mt-auto">
                             <div class="flex justify-between text-xs font-medium theme-text-muted mb-1">
                                 <span>${event.tickets_sold} Booked</span>
@@ -896,6 +903,26 @@
                 e.preventDefault();
                 const btn = document.getElementById('submit-btn');
                 btn.disabled = true; btn.textContent = 'Uploading & Publishing...';
+
+                // Date & Time Validation: Prevent creating past events or invalid time windows
+                const startDateVal = document.getElementById('event_date').value;
+                const endDateVal = document.getElementById('event_end_date').value;
+                if (!startDateVal) {
+                    showNotif('Please select an event start date.', 'error');
+                    btn.disabled = false; btn.textContent = 'Publish Event';
+                    return;
+                }
+                const startDate = new Date(startDateVal);
+                if (startDate < new Date()) {
+                    showNotif('Event start date cannot be in the past.', 'error');
+                    btn.disabled = false; btn.textContent = 'Publish Event';
+                    return;
+                }
+                if (endDateVal && new Date(endDateVal) <= startDate) {
+                    showNotif('Event end date must be after the start date.', 'error');
+                    btn.disabled = false; btn.textContent = 'Publish Event';
+                    return;
+                }
 
                 let finalPosterUrl = null;
                 const fileInput = document.getElementById('poster_file');

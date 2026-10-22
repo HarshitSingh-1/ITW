@@ -194,11 +194,14 @@
                         const dateObj = new Date(event.event_date);
                         const endDateObj = event.event_end_date ? new Date(event.event_end_date) : new Date(dateObj.getTime() + (2 * 60 * 60 * 1000));
                         
-                        const dateString = dateObj.toLocaleDateString('en-GB');
+                        let dateString = dateObj.toLocaleDateString('en-GB');
                         let timeString = dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
                         if (event.event_end_date) {
                             const eD = new Date(event.event_end_date);
                             if (dateObj.toDateString() === eD.toDateString()) {
+                                timeString += ` - ${eD.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
+                            } else {
+                                dateString += ` to ${eD.toLocaleDateString('en-GB')}`;
                                 timeString += ` - ${eD.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
                             }
                         }

@@ -1,31 +1,235 @@
-/* Custom global styles and Theme Variables */
+/* ==========================================================================
+   BOOKMYCOLLEGE - GLOBAL STYLESHEET & THEME COLOR VARIABLES
+   ==========================================================================
+   QUICK GUIDE FOR PROFESSOR / VIVA QUESTIONS:
+   If the professor says:
+   - "Change the website background color"       -> Change --bg-base
+   - "Change the card / container / form box"    -> Change --bg-surface
+   - "Change main headings or title text"        -> Change --text-main
+   - "Change subtitles, hints, or placeholders"  -> Change --text-muted
+   - "Change card borders or divider lines"      -> Change --border-color
+   - "Change buttons, focus rings, or highlights"-> Change --accent-main
+   - "Change button hover color"                 -> Change --accent-hover
+   - "Change the top navigation bar background"  -> Change --nav-glass
+   ========================================================================== */
 
+/* --------------------------------------------------------------------------
+   1. LIGHT THEME PALETTE (Default)
+   Active when: data-theme="light" or default page load
+   -------------------------------------------------------------------------- */
 :root, [data-theme="light"] {
+    /* 
+       WHERE THIS APPEARS:
+       - Full page background on ALL pages:
+         * index.html (Main home background)
+         * login.html (Background behind the sign-in card)
+         * onboarding.html (Background behind profile setup form)
+         * wallet.html (Background behind ticket list)
+         * history.html (Background behind past events)
+         * admin.html (Dashboard background)
+         * scanner.html (Camera scanner page background)
+       - Also used for hover state on mobile drawer navigation links
+    */
     --bg-base: #f9fafb; /* gray-50 */
+
+    /* 
+       WHERE THIS APPEARS:
+       - Every card, container, modal popup, and form input box:
+         * index.html: Search bar background (#search-input), category chips, 
+           event poster cards, event detail popup modal, donation progress card
+         * login.html: Central login white card box
+         * onboarding.html: The white form card container
+         * wallet.html: Movie-style ticket cards & QR code container
+         * history.html: Event attendance cards (Attended/Missed)
+         * admin.html: Analytics stat boxes, create-event form, volunteer modal
+         * scanner.html: Camera preview card & result alert box
+         * All input boxes (<input>, <select>, <textarea>, select options)
+    */
     --bg-surface: #ffffff; /* white */
+
+    /* 
+       WHERE THIS APPEARS:
+       - Primary text, headings, and titles:
+         * Main headings: "BookMyCollege", "Recommended Events", "Trending Now"
+         * Event titles on cards and modal popups (#detail-title)
+         * Student name on tickets, forms, and profiles
+         * Active tab text ("Overview", "Discussion", "Reviews")
+         * Text you type inside any input box (<input>, <textarea>)
+    */
     --text-main: #111827; /* gray-900 */
+
+    /* 
+       WHERE THIS APPEARS:
+       - Secondary, subtitle, description, and hint text:
+         * Event dates, time badges, and venue names ("Campus Auditorium")
+         * Search input placeholder ("Search events by title...")
+         * Inactive navigation links ("My Wallet", "History")
+         * Discussion comment timestamps ("2 hours ago")
+         * Capacity counter subtitles ("15 / 100 booked")
+         * Subtitles on login.html ("Sign in with your campus Google account...")
+         * Subtitles on onboarding.html ("Welcome to BookMyCollege...")
+    */
     --text-muted: #6b7280; /* gray-500 */
+
+    /* 
+       WHERE THIS APPEARS:
+       - Outlines, separation lines, and card borders:
+         * Search bar border (#search-input)
+         * Bottom line under the top sticky navbar (border-b theme-border)
+         * Outlines around event cards, form cards, and popup modals
+         * Category pill chip borders (.category-chip)
+         * Perforated dashed tear-line in wallet.html ticket cards
+         * Table borders and dividers in admin.html
+         * Horizontal divider lines inside discussion & review sections
+    */
     --border-color: #e5e7eb; /* gray-200 */
+
+    /* 
+       WHERE THIS APPEARS:
+       - Primary brand action color, active highlights, buttons, and focus glow:
+         * "College" part of the BookMyCollege navbar brand logo
+         * Active page indicator link in navbar ("Home", "My Wallet", etc.)
+         * Search bar focus border and outline ring
+         * "Book Ticket", "Save & Continue", and primary submit buttons
+         * Active category pill highlight in index.html
+         * Progress bar color for tickets and donations (#detail-capacity-bar)
+         * Blue focus ring when typing in form inputs in onboarding.html/admin.html
+    */
     --accent-main: #2563eb; /* blue-600 */
+
+    /* 
+       WHERE THIS APPEARS:
+       - Hover state for primary buttons and interactive elements:
+         * When mouse hovers over "Book Ticket" or "Save & Continue" buttons
+         * Hover state for active category chips and action links
+    */
     --accent-hover: #1d4ed8; /* blue-700 */
+
+    /* 
+       WHERE THIS APPEARS:
+       - Top sticky navigation bar glassmorphism background:
+         * Top navbar (<nav class="theme-nav-glass backdrop-blur-xl">) present
+           at the top of index.html, wallet.html, history.html, admin.html, scanner.html
+    */
     --nav-glass: rgba(255, 255, 255, 0.8);
+
+    /* 
+       WHERE THIS APPEARS:
+       - Drop shadow tint under cards, dropdowns, and popup modals
+    */
     --shadow-color: rgba(0, 0, 0, 0.05);
+
+    /* 
+       WHERE THIS APPEARS:
+       - Native calendar icon filter for date inputs (None needed in light mode)
+    */
     --calendar-filter: none;
 }
 
+/* --------------------------------------------------------------------------
+   2. DARK THEME PALETTE
+   Active when: data-theme="dark" (selected from top navbar theme dropdown)
+   -------------------------------------------------------------------------- */
 [data-theme="dark"] {
+    /* 
+       WHERE THIS APPEARS (DARK MODE):
+       - Full page background on ALL pages in dark mode:
+         * index.html (Deep dark page background)
+         * login.html (Dark background behind sign-in card)
+         * onboarding.html (Dark background behind setup form)
+         * wallet.html (Dark background behind tickets)
+         * history.html (Dark background behind past events)
+         * admin.html (Dark dashboard background)
+         * scanner.html (Dark scanner page background)
+    */
     --bg-base: #020617; /* slate-950 */
+
+    /* 
+       WHERE THIS APPEARS (DARK MODE):
+       - Dark surface background for cards, containers, inputs, and modals:
+         * index.html: Dark card surfaces, search bar, event detail modal, donation card
+         * login.html: Dark sign-in container card
+         * onboarding.html: Dark form container card
+         * wallet.html: Dark ticket cards and QR code box
+         * history.html: Dark event cards
+         * admin.html: Dark analytics panels, forms, and tables
+         * scanner.html: Dark camera card and scanner overlay
+         * All input fields, select dropdowns, and textareas in dark mode
+    */
     --bg-surface: #0f172a; /* slate-900 */
+
+    /* 
+       WHERE THIS APPEARS (DARK MODE):
+       - Main text, titles, and headings in dark mode:
+         * White/light text for headings ("BookMyCollege", "Trending Now", etc.)
+         * Event titles, student names, and primary card text
+         * Text you type inside inputs and textareas in dark mode
+    */
     --text-main: #f8fafc; /* slate-50 */
+
+    /* 
+       WHERE THIS APPEARS (DARK MODE):
+       - Secondary, subtitle, placeholder, and metadata text in dark mode:
+         * Event dates, venues, category tags, and timestamps
+         * Input placeholder text ("Search events by title...")
+         * Unselected nav links in navbar
+         * Discussion comment timestamps and capacity subtitles
+    */
     --text-muted: #94a3b8; /* slate-400 */
+
+    /* 
+       WHERE THIS APPEARS (DARK MODE):
+       - Dark borders, outlines, and divider lines in dark mode:
+         * Navbar bottom border
+         * Input box borders and card outlines
+         * Category chip borders
+         * Perforated ticket tear-lines in wallet.html
+         * Table grid lines in admin.html
+    */
     --border-color: #1e293b; /* slate-800 */
+
+    /* 
+       WHERE THIS APPEARS (DARK MODE):
+       - Primary brand action color, buttons, and highlights in dark mode:
+         * Brand logo accent, active navbar links
+         * "Book Ticket", "Save", and submit buttons
+         * Focus glow ring on input fields
+         * Capacity and donation progress bars
+    */
     --accent-main: #3b82f6; /* blue-500 */
+
+    /* 
+       WHERE THIS APPEARS (DARK MODE):
+       - Hover state for buttons and links in dark mode:
+         * Hover color on primary buttons and category chips
+    */
     --accent-hover: #60a5fa; /* blue-400 */
+
+    /* 
+       WHERE THIS APPEARS (DARK MODE):
+       - Top sticky navbar translucent dark glass background:
+         * Top navbar in index.html, wallet.html, history.html, admin.html, scanner.html
+    */
     --nav-glass: rgba(2, 6, 23, 0.8);
+
+    /* 
+       WHERE THIS APPEARS (DARK MODE):
+       - Shadow tint under dark mode cards and popups
+    */
     --shadow-color: rgba(0, 0, 0, 0.3);
+
+    /* 
+       WHERE THIS APPEARS (DARK MODE):
+       - Inverts native calendar picker icon to white so it is clearly visible
+         inside dark date input fields in admin.html / index.html
+    */
     --calendar-filter: invert(1);
 }
 
+/* --------------------------------------------------------------------------
+   3. GLOBAL BODY & ELEMENT STYLES
+   -------------------------------------------------------------------------- */
+/* Main page body defaults - uses --bg-base and --text-main */
 body {
     background-color: var(--bg-base);
     color: var(--text-main);
@@ -33,15 +237,36 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* Base utility overrides via CSS variables */
+/* --------------------------------------------------------------------------
+   4. BASE THEME UTILITY CLASSES (Applied across HTML templates)
+   -------------------------------------------------------------------------- */
+/* Applied to <body> on all pages for page background */
 .theme-bg-base { background-color: var(--bg-base); }
+
+/* Applied to cards, ticket stubs, modal popups, and dropdown menus */
 .theme-bg-surface { background-color: var(--bg-surface); }
+
+/* Applied to main headings, event titles, and primary text */
 .theme-text-main { color: var(--text-main); }
+
+/* Applied to dates, venues, subtitles, and secondary hints */
 .theme-text-muted { color: var(--text-muted); }
+
+/* Applied to borders on navbars, cards, inputs, and divider lines */
 .theme-border { border-color: var(--border-color); }
+
+/* Applied to the top sticky navigation bar for glassmorphic effect */
 .theme-nav-glass { background-color: var(--nav-glass); }
 
-/* Form Inputs & Controls for Dark/Light Themes */
+/* --------------------------------------------------------------------------
+   5. FORM INPUTS & CONTROLS (index.html, onboarding.html, admin.html)
+   -------------------------------------------------------------------------- */
+/* 
+   Styles all text inputs, search bars, selects, and textareas:
+   - Background matches --bg-surface (white in light mode, dark in dark mode)
+   - Text color matches --text-main
+   - Border matches --border-color
+*/
 .glass-input, 
 input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]), 
 select, 
@@ -51,6 +276,11 @@ textarea {
     border: 1px solid var(--border-color) !important;
 }
 
+/* 
+   When user clicks/focuses an input to type:
+   - Border changes to --accent-main (blue)
+   - Adds a subtle glowing focus ring around the input
+*/
 .glass-input:focus, 
 input:not([type="submit"]):not([type="button"]):focus, 
 select:focus, 
@@ -60,6 +290,7 @@ textarea:focus {
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25) !important;
 }
 
+/* Placeholder hint text inside search bars and inputs - uses --text-muted */
 .glass-input::placeholder, 
 input::placeholder, 
 textarea::placeholder {
@@ -67,17 +298,19 @@ textarea::placeholder {
     opacity: 0.7;
 }
 
+/* Dropdown <option> items inside <select> elements */
 select option {
     background-color: var(--bg-surface) !important;
     color: var(--text-main) !important;
 }
 
-/* Make date/time picker calendar icons readable in dark mode */
+/* 
+   Makes browser calendar/clock icons readable in dark mode:
+   Uses --calendar-filter: invert(1) in dark mode to turn black icons white
+*/
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
     filter: var(--calendar-filter);
     cursor: pointer;
 }
-
-
